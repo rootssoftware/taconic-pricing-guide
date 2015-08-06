@@ -25,12 +25,31 @@ package be.roots.taconic.pricingguide.service;
  *
  */
 
+import be.roots.taconic.pricingguide.PricingGuideApplication;
 import be.roots.taconic.pricingguide.domain.Request;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
-public interface PricingGuideService {
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringApplicationConfiguration(classes = PricingGuideApplication.class)
+@WebAppConfiguration
+public class PricingGuideServiceTest {
 
-    void buildPricingGuide(Request request) throws IOException;
+    @Autowired
+    private PricingGuideService pricingGuideService;
+
+    @Test
+    public void testUnfoundContact() throws IOException {
+
+        pricingGuideService.buildPricingGuide(new Request("123456789", "not-existing-contact", new ArrayList<String>()));
+
+    }
 
 }

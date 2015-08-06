@@ -27,17 +27,23 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Model;
+import be.roots.taconic.pricingguide.domain.Request;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
+import be.roots.taconic.pricingguide.util.JsonUtil;
 import com.itextpdf.text.DocumentException;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.mail.MessagingException;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PricingGuideServiceImpl implements PricingGuideService {
@@ -59,30 +65,37 @@ public class PricingGuideServiceImpl implements PricingGuideService {
     @Autowired
     private ReportService reportService;
 
+    @Value("${request.retry.location}")
+    private String requestRetryLocation;
+
+    @Value("${request.error.location}")
+    private String requestErrorLocation;
+
     @Async
     @Override
-    public void buildPricingGuide(String id, String hsID, List<String> modelList) throws IOException {
+    public void buildPricingGuide(Request request) throws IOException {
 
-        LOGGER.info ( id + " - Received request to create pricing guide for hsID : " + hsID + ", modelList : " + modelList );
+        LOGGER.info ( request.getId() + " - Received request to create pricing guide for hsID : " + request.getHsId() + ", modelList : " + request.getModelList() );
 
-        final Contact contact = hubSpotService.getContactFor(hsID);
+        final Contact contact = hubSpotService.getContactFor(request.getHsId());
 
         if ( contact == null ) {
-            LOGGER.error ( id + " - Unable to find a Contact for hsID : " + hsID );
+            LOGGER.error(request.getId() + " - Unable to find a Contact for hsID : " + request.getHsId() + ", will save and retry later");
+            saveRequestForRetry ( request );
             return;
         }
 
         try {
-            LOGGER.info ( id + " - Report the request in the CSV record " );
-            reportService.report(contact, modelList );
+            LOGGER.info ( request.getId() + " - Report the request in the CSV record " );
+            reportService.report(contact, request.getModelList() );
         } catch (IOException e) {
-            LOGGER.error ( id + " - Couldn't report the request in the CSV record, still continuing with creating pricing guide ", e );
+            LOGGER.error ( request.getId() + " - Couldn't report the request in the CSV record, still continuing with creating pricing guide ", e );
         }
 
-        final List<Model> models = modelRepository.findFor ( modelList );
+        final List<Model> models = modelRepository.findFor ( request.getModelList() );
 
         if (CollectionUtils.isEmpty(models)) {
-            LOGGER.error ( id + " - No models were found, thus no guide can be created." );
+            LOGGER.error ( request.getId() + " - No models were found, thus no guide can be created." );
             return;
         }
 
@@ -90,23 +103,41 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         try {
             pricingGuide = pdfService.createPricingGuide(contact, models);
         } catch (DocumentException e) {
-            LOGGER.error (id + " - Could create the pricing guide.", e);
+            LOGGER.error ( request.getId() + " - Could create the pricing guide.", e);
             return;
         }
 
         if ( pricingGuide == null ) {
-            LOGGER.error (id + " - Could create the pricing guide.");
+            LOGGER.error ( request.getId() + " - Could create the pricing guide.");
             return;
         }
 
         try {
             mailService.sendMail(contact, pricingGuide);
         } catch (MessagingException e) {
-            LOGGER.error(id + " - Error in sending the pricing guide to " + contact.getEmail(), e);
+            LOGGER.error( request.getId() + " - Error in sending the pricing guide to " + contact.getEmail(), e);
             return;
         }
 
-        LOGGER.info ( id + " - Pricing guide successfully sent to  " + contact.getEmail() );
+        LOGGER.info ( request.getId() + " - Pricing guide successfully sent to  " + contact.getEmail() );
+    }
+
+    private void saveRequestForRetry(Request request) {
+
+        String location = requestRetryLocation;
+
+        if ( request.getRetryCount() > 5 ) {
+            location = requestErrorLocation;
+        }
+
+        try {
+            final String asJson = JsonUtil.asJson(request);
+
+            FileUtils.writeStringToFile(new File(location, UUID.randomUUID().toString() + ".txt"), asJson);
+        } catch (IOException e) {
+            LOGGER.error ( request.getId() +  " - " + e.getLocalizedMessage(), e);
+        }
+
     }
 
 }

@@ -1,4 +1,4 @@
-package be.roots.taconic.pricingguide.service;
+package be.roots.taconic.pricingguide.domain;
 
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
@@ -25,12 +25,57 @@ package be.roots.taconic.pricingguide.service;
  *
  */
 
-import be.roots.taconic.pricingguide.domain.Request;
+import java.util.List;
 
-import java.io.IOException;
+public class Request {
 
-public interface PricingGuideService {
+    private String id;
+    private String hsId;
+    private List<String> modelList;
+    private int retryCount = 1;
 
-    void buildPricingGuide(Request request) throws IOException;
+    public Request() {
+    }
 
+    public Request(String id, String hsId, List<String> modelList) {
+        this.id = id;
+        this.hsId = hsId;
+        this.modelList = modelList;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getHsId() {
+        return hsId;
+    }
+
+    public void setHsId(String hsId) {
+        this.hsId = hsId;
+    }
+
+    public List<String> getModelList() {
+        return modelList;
+    }
+
+    public void setModelList(List<String> modelList) {
+        this.modelList = modelList;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    public void increaseRetryCount() {
+        retryCount ++;
+    }
 }

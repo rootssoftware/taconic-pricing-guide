@@ -72,6 +72,9 @@ public class PDFServiceImpl implements PDFService {
     @Autowired
     private TemplateRepository templateRepository;
 
+    @Autowired
+    private GitService gitService;
+
     private PDFTemplates pdfTemplate;
 
     @PostConstruct
@@ -147,7 +150,8 @@ public class PDFServiceImpl implements PDFService {
             info.put("Keywords",
                         "Created for " + contact.getFullName() + ". " +
                         "Currency used : " + contact.getCurrency() + ". " +
-                        "Mailed to " + contact.getEmail() + ". "
+                        "Mailed to " + contact.getEmail() + ". " +
+                        "Build on " + gitService.getCommitId()
             );
 
             info.put("Creator", "Roots Software - http://www.roots.be - info@roots.be");

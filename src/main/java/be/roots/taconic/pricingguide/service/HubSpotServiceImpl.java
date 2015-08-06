@@ -27,7 +27,6 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Currency;
-import be.roots.taconic.pricingguide.domain.JobRole;
 import be.roots.taconic.pricingguide.util.HttpUtil;
 import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;

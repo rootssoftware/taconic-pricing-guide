@@ -25,6 +25,7 @@ package be.roots.taconic.pricingguide.controller;
  *
  */
 
+import be.roots.taconic.pricingguide.domain.Request;
 import be.roots.taconic.pricingguide.service.PricingGuideService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,7 @@ public class PricingGuideController {
 
         LOGGER.info ( id + " - Request to start building a pricing guide for " + hsID + " based on " + modelList );
 
-        pricingGuideService.buildPricingGuide(id, hsID, modelList);
+        pricingGuideService.buildPricingGuide( new Request( id, hsID, modelList ) );
 
         LOGGER.info ( id + " - Build requested for " + hsID + " based on " + modelList + ", redirecting the user now." );
 

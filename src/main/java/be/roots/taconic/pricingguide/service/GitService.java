@@ -25,12 +25,8 @@ package be.roots.taconic.pricingguide.service;
  *
  */
 
-import be.roots.taconic.pricingguide.domain.Request;
+public interface GitService {
 
-import java.io.IOException;
-
-public interface PricingGuideService {
-
-    void buildPricingGuide(Request request) throws IOException;
+    String getCommitId();
 
 }

@@ -25,12 +25,24 @@ package be.roots.taconic.pricingguide.service;
  *
  */
 
-import be.roots.taconic.pricingguide.domain.Request;
+import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.Properties;
 
-public interface PricingGuideService {
+@Service
+public class GitServiceImpl implements GitService {
 
-    void buildPricingGuide(Request request) throws IOException;
+    final private Properties properties = new Properties();
 
+    @PostConstruct
+    public void init() throws IOException {
+        properties.load(GitService.class.getResourceAsStream("/git.properties"));
+    }
+
+    @Override
+    public String getCommitId() {
+        return properties.getProperty("git.commit.id");
+    }
 }
