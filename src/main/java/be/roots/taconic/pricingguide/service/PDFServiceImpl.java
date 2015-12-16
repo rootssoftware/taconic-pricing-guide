@@ -29,6 +29,7 @@ import be.roots.taconic.pricingguide.domain.*;
 import be.roots.taconic.pricingguide.respository.TemplateRepository;
 import be.roots.taconic.pricingguide.util.*;
 import com.itextpdf.text.*;
+import com.itextpdf.text.html.simpleparser.HTMLWorker;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
@@ -42,6 +43,7 @@ import org.springframework.util.StringUtils;
 import javax.annotation.PostConstruct;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -76,14 +78,8 @@ public class PDFServiceImpl implements PDFService {
     @Value("${cover.title.4}")
     private String coverTitle4;
 
-    @Value("${disclaimer.1}")
-    private String disclaimer1;
-
-    @Value("${disclaimer.2}")
-    private String disclaimer2;
-
-    @Value("${disclaimer.3}")
-    private String disclaimer3;
+    @Value("${disclaimer}")
+    private String disclaimer;
 
     @Autowired
     private DefaultService defaultService;
@@ -620,14 +616,19 @@ public class PDFServiceImpl implements PDFService {
                 text.showTextAligned(Element.ALIGN_LEFT, new SimpleDateFormat("MM-dd-yyyy").format(new Date()), 355, 643, 0);
             }
 
-            text.setColorFill(iTextUtil.getFontDisclaimer().getColor());
-            text.setFontAndSize(iTextUtil.getFontDisclaimer().getBaseFont(), iTextUtil.getFontDisclaimer().getSize());
-
-            text.showTextAligned(Element.ALIGN_JUSTIFIED, disclaimer1, 55, 555, 0);
-            text.showTextAligned(Element.ALIGN_JUSTIFIED, disclaimer2, 55, 536, 0);
-            text.showTextAligned(Element.ALIGN_JUSTIFIED, disclaimer3, 55, 517, 0);
-
             text.endText();
+
+            final ColumnText ct = new ColumnText(tocContent);
+            ct.setSimpleColumn(new Rectangle(55, 517, iTextUtil.PAGE_SIZE.getWidth() - 45, 575));
+            final List<Element> elements = HTMLWorker.parseToList(new StringReader(disclaimer), null);
+            final Paragraph p = new Paragraph();
+            p.setFont(iTextUtil.getFontDisclaimer());
+            p.setAlignment(Element.ALIGN_JUSTIFIED);
+            for ( Element element : elements ) {
+                p.add(element);
+            }
+            ct.addElement(p);
+            ct.go();
 
             stamper.close();
             reader.close();
