@@ -27,19 +27,19 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Currency;
+import be.roots.taconic.pricingguide.hubspot.FormSubmission;
+import be.roots.taconic.pricingguide.hubspot.RecentContact;
+import be.roots.taconic.pricingguide.hubspot.RecentContacts;
 import be.roots.taconic.pricingguide.util.HttpUtil;
-import com.google.common.collect.Lists;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
 
 @Service
 public class HubSpotServiceImpl implements HubSpotService {
@@ -57,50 +57,47 @@ public class HubSpotServiceImpl implements HubSpotService {
 
     public Contact getContactFor ( String hsID ) throws IOException {
 
-        if (StringUtils.isEmpty(hsID)) {
-            LOGGER.error("Will not start looking for an empty hsID " + hsID);
-            return null;
-        }
+        LOGGER.info("Start getting the recent contact information based on conversion-id: " + hsID );
 
-        LOGGER.info("Start get HubSpot info");
+        final RestTemplate restTemplate = new RestTemplate();
 
-        try {
-
-            final String response = HttpUtil.readString(apiUrl + apiKey);
-            final ObjectMapper hsMap = new ObjectMapper();
-            final JsonNode json = hsMap.readTree(response);
-
-            LOGGER.info("Looking to match " + hsID);
-            if(json != null) {
-
-                String vid = null;
-                //loop over contacts nodes to find matching form hsid
-                for (JsonNode thisNode : Lists.newArrayList((json.get("contacts").getElements()))) {
-                    final ArrayList<JsonNode> formNodes = Lists.newArrayList(thisNode.get("form-submissions").getElements());
-                    if ( ! CollectionUtils.isEmpty ( formNodes ) ) {
-                        for (JsonNode innerFormNode : formNodes) {
-                            if (hsID.equals(innerFormNode.get("conversion-id").getTextValue())) {
-                                LOGGER.info("Match found, now resolving VID as " + thisNode.get("vid"));
-                                vid = thisNode.get("vid").toString();
-                            }
-                        }
-                    }
-                }
-
-                if ( vid != null ) {
-
-                    final Contact contact = getContactDetailsFor(String.format(apiContactUrl + apiKey, vid));
-                    contact.setHsId ( hsID );
-                    return contact;
-
-                }
-
+        RecentContacts recentContacts = null;
+        do {
+            if ( recentContacts == null ) {
+                // first call
+                LOGGER.info("Initial call for recent contacts" );
+                recentContacts = restTemplate.getForObject(apiUrl + apiKey + "&count=100", RecentContacts.class);
+            } else {
+                // page through the next calls
+                LOGGER.info("Secondary call for recent contacts with timeOffset=" + recentContacts.getTimeOffset() + ", and vidOffset=" + recentContacts.getVidOffset() );
+                recentContacts = restTemplate.getForObject(apiUrl + apiKey + "&count=100&timeOffset=" + recentContacts.getTimeOffset() + "&vidOffset=" + recentContacts.getVidOffset(), RecentContacts.class);
             }
-        } catch (MalformedURLException e) {
-            LOGGER.error ( e.getLocalizedMessage(), e );
-        }
 
-        LOGGER.error ( "Not able to find contact for hsID " + hsID );
+            if ( recentContacts != null && ! CollectionUtils.isEmpty(recentContacts.getContacts())) {
+
+                for ( RecentContact contact : recentContacts.getContacts() ) {
+
+                    if ( ! CollectionUtils.isEmpty(contact.getFormSubmissions() ) ) {
+
+                        for ( FormSubmission form : contact.getFormSubmissions() ) {
+
+                            if ( hsID.equals(form.getConversionId()) ) {
+                                final Contact result = getContactDetailsFor(String.format(apiContactUrl + apiKey, contact.getVid()));
+                                result.setHsId ( hsID );
+                                return result;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+            }
+
+        } while ( recentContacts.isHasMore() );
+
+        LOGGER.info("No recent contact information found for: " + hsID );
 
         return null;
 

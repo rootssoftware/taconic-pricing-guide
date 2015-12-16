@@ -33,6 +33,7 @@ import java.util.List;
 
 public class PDFTemplates {
 
+    private Logo logo;
     private List<Template> before;
     private Template model;
     private List<Template> after;
@@ -64,10 +65,20 @@ public class PDFTemplates {
         this.model = model;
     }
 
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    public Logo getLogo() {
+        return logo;
+    }
+
+    public void setLogo(Logo logo) {
+        this.logo = logo;
+    }
+
     @Override
     public String toString() {
         return "PDFTemplates{" +
                 "after=" + after +
+                ", logo=" + logo +
                 ", before=" + before +
                 ", model=" + model +
                 '}';

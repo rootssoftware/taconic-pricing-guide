@@ -1,6 +1,5 @@
 package be.roots.taconic.pricingguide.domain;
 
-
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
  *  generate a full featured PDF Pricing Guide by using using iText
@@ -26,37 +25,13 @@ package be.roots.taconic.pricingguide.domain;
  *
  */
 
-public class Template {
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-    private boolean isTocTemplate;
+public class Logo {
+
     private String url;
-    private String name;
-    private boolean toc;
 
-    public boolean isTocTemplate() {
-        return isTocTemplate;
-    }
-
-    public void setIsTocTemplate(boolean isTocTemplate) {
-        this.isTocTemplate = isTocTemplate;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isToc() {
-        return toc;
-    }
-
-    public void setToc(boolean toc) {
-        this.toc = toc;
-    }
-
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
     public String getUrl() {
         return url;
     }
@@ -65,4 +40,10 @@ public class Template {
         this.url = url;
     }
 
+    @Override
+    public String toString() {
+        return "Logo{" +
+                "url='" + url + '\'' +
+                '}';
+    }
 }

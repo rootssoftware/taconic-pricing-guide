@@ -44,10 +44,15 @@ public class iTextUtil {
     private final static Logger LOGGER = Logger.getLogger(iTextUtil.class);
 
     public static final int PAGE_MARGIN_TOP = 72;
-    public static final Rectangle PAGE_SIZE = PageSize.LETTER_LANDSCAPE;
+    public static final Rectangle PAGE_SIZE = PageSize.LETTER;
     public static final int PAGE_HEIGHT = (int) PAGE_SIZE.getHeight() - ( PAGE_MARGIN_TOP * 2 ) - 20;
 
+    private static final Font FONT_COVER_TEXT;
+    private static final Font FONT_COVER_PRICINGGUIDE;
+    private static final Font FONT_COVER_YEAR;
+
     private static final Font FONT_PERSONALIZATION;
+    private static final Font FONT_DISCLAIMER;
 
     private static final Font FONT_TOC_TITLE;
     private static final Font FONT_TOC;
@@ -73,12 +78,6 @@ public class iTextUtil {
 
     static {
 
-        // embed the taconic font in the PDF
-        /*
-        FontFactory.defaultEmbedding = true;
-        FontFactory.register("GothamSSm-Medium.otf");
-        FontFactory.register("GothamSSm-Light.otf");
-*/
         PURPLE = new BaseColor(93, 32, 91);
         SILVER = new BaseColor(239, 239, 239);
         TACONIC_RED = new BaseColor(237, 32, 40);
@@ -97,7 +96,12 @@ public class iTextUtil {
             LOGGER.error(e.getLocalizedMessage(), e);
         }
 
+        FONT_COVER_TEXT = new Font ( lightFont, 18, Font.NORMAL, TACONIC_RED);
+        FONT_COVER_PRICINGGUIDE = new Font ( lightFont, 24, Font.NORMAL, PURPLE);
+        FONT_COVER_YEAR = new Font ( lightFont, 38, Font.NORMAL, PURPLE);
+
         FONT_PERSONALIZATION = new Font ( mediumFont, 12, Font.NORMAL, BaseColor.DARK_GRAY);
+        FONT_DISCLAIMER = new Font ( lightFont, 10, Font.NORMAL, BaseColor.DARK_GRAY);
 
         FONT_TOC_TITLE = new Font ( lightFont, 16, Font.NORMAL, BaseColor.DARK_GRAY);
         FONT_TOC = new Font ( lightFont, 10, Font.NORMAL, BaseColor.DARK_GRAY);
@@ -132,6 +136,18 @@ public class iTextUtil {
 
     public static BaseColor getTaconicRed() {
         return TACONIC_RED;
+    }
+
+    public static Font getFontCoverText() {
+        return FONT_COVER_TEXT;
+    }
+
+    public static Font getFontCoverPricingguide() {
+        return FONT_COVER_PRICINGGUIDE;
+    }
+
+    public static Font getFontCoverYear() {
+        return FONT_COVER_YEAR;
     }
 
     public static Font getFontTocSymbol() {
@@ -188,6 +204,10 @@ public class iTextUtil {
 
     public static Font getFontModelSymbol() {
         return FONT_MODEL_SYMBOL;
+    }
+
+    public static Font getFontDisclaimer() {
+        return FONT_DISCLAIMER;
     }
 
     public static Font getFontContactUs() {
@@ -324,7 +344,7 @@ public class iTextUtil {
 
     public static Document createNewDocument() {
         final Document document = new Document();
-        document.setPageSize(PAGE_SIZE); //new Rectangle(612, 792);
+        document.setPageSize(PAGE_SIZE);
         document.setMargins(-10, -10, PAGE_MARGIN_TOP, PAGE_MARGIN_TOP);
         return document;
     }
@@ -382,4 +402,14 @@ public class iTextUtil {
         }
     }
 
+    public static Image getImageFromByteArray(byte[] pdf) {
+        try {
+            return Image.getInstance(pdf);
+        } catch (BadElementException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

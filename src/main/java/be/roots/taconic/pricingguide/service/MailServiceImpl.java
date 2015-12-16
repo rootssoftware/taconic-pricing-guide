@@ -50,11 +50,14 @@ public class MailServiceImpl implements MailService {
     @Value("${email.from}")
     private String fromEmail;
 
-    @Value("${email.report.recipient")
+    @Value("${email.report.recipient}")
     private String reportRecipientEmail;
     
     @Value("${document.title}")
     private String documentTitle;
+
+    @Value("${document.file.name}")
+    private String documentFileName;
 
     @Autowired
     private JavaMailSender javaMailSender;
@@ -95,7 +98,7 @@ public class MailServiceImpl implements MailService {
 
         helper.setText(body, true);
 
-        helper.addAttachment( "Taconic-Biosciences-2015-Pricing-Guide.pdf", new ByteArrayResource(pricingGuide));
+        helper.addAttachment( documentFileName, new ByteArrayResource(pricingGuide));
 
         javaMailSender.send(helper.getMimeMessage());
 

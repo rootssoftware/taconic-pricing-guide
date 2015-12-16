@@ -1,5 +1,8 @@
-package be.roots.taconic.pricingguide.domain;
+package be.roots.taconic.pricingguide.hubspot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.List;
 
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
@@ -25,44 +28,19 @@ package be.roots.taconic.pricingguide.domain;
  *  For more information, please contact Roots nv at this address: support@roots.be
  *
  */
+public class RecentContact {
 
-public class Template {
+    private long vid;
 
-    private boolean isTocTemplate;
-    private String url;
-    private String name;
-    private boolean toc;
+    @JsonProperty("form-submissions")
+    private List<FormSubmission> formSubmissions;
 
-    public boolean isTocTemplate() {
-        return isTocTemplate;
+    public long getVid() {
+        return vid;
     }
 
-    public void setIsTocTemplate(boolean isTocTemplate) {
-        this.isTocTemplate = isTocTemplate;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isToc() {
-        return toc;
-    }
-
-    public void setToc(boolean toc) {
-        this.toc = toc;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+    public List<FormSubmission> getFormSubmissions() {
+        return formSubmissions;
     }
 
 }

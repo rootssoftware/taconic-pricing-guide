@@ -52,6 +52,10 @@ public enum Currency {
         return description;
     }
 
+    public String getTitlePageDescription() {
+        return getDescription().toUpperCase().replaceAll("-", "");
+    }
+
     public Currency getProfitCurrency() {
         return profitCurrency;
     }

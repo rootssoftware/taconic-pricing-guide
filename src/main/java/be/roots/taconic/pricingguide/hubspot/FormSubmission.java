@@ -1,5 +1,6 @@
-package be.roots.taconic.pricingguide.domain;
+package be.roots.taconic.pricingguide.hubspot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
@@ -25,44 +26,13 @@ package be.roots.taconic.pricingguide.domain;
  *  For more information, please contact Roots nv at this address: support@roots.be
  *
  */
+public class FormSubmission {
 
-public class Template {
+    @JsonProperty("conversion-id")
+    private String conversionId;
 
-    private boolean isTocTemplate;
-    private String url;
-    private String name;
-    private boolean toc;
-
-    public boolean isTocTemplate() {
-        return isTocTemplate;
-    }
-
-    public void setIsTocTemplate(boolean isTocTemplate) {
-        this.isTocTemplate = isTocTemplate;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isToc() {
-        return toc;
-    }
-
-    public void setToc(boolean toc) {
-        this.toc = toc;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+    public String getConversionId() {
+        return conversionId;
     }
 
 }

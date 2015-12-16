@@ -33,6 +33,7 @@ public class TocEntry implements Comparable<TocEntry> {
     private String name;
     private int numberOfPages;
     private int originalPageNumber;
+    private int finalPageNumber = -1;
     private String sort;
     private boolean includedInToc;
 
@@ -102,4 +103,15 @@ public class TocEntry implements Comparable<TocEntry> {
         return ( Toc.MODEL_SORT_PREFIX + "___0000000000" ).equals(sort);
     }
 
+    public boolean isNotSecondItemOnSamePage() {
+        return ! ( getLevel() > 1 && ! getSort().endsWith("___0000000000") );
+    }
+
+    public void setFinalPageNumber(int finalPageNumber) {
+        this.finalPageNumber = finalPageNumber;
+    }
+
+    public int getFinalPageNumber() {
+        return finalPageNumber;
+    }
 }

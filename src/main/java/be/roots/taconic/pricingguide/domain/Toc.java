@@ -71,8 +71,23 @@ public class Toc {
 
     public String getPageSequence() {
 
+
+        int currentPageNumber = 1;
+        int nextPageNumber = 1;
+
         String pageSequence = "";
         for ( TocEntry entry : getEntriesSorted() ) {
+
+            // setting the correct page number
+            if ( entry.isNotSecondItemOnSamePage() ) {
+                currentPageNumber = nextPageNumber;
+            }
+            entry.setFinalPageNumber(currentPageNumber);
+            if ( entry.isNotSecondItemOnSamePage() && ! entry.isModelHeader() ) {
+                nextPageNumber = currentPageNumber + entry.getNumberOfPages();
+            }
+
+            // calculating the pagesequence
             if ( entry.getNumberOfPages() > 0 ) {
                 if (! StringUtils.isEmpty(pageSequence)) {
                     pageSequence += ",";
@@ -101,7 +116,13 @@ public class Toc {
     }
 
     public int getNumberOfPages() {
-        return (this.getTocEntries().size() / PDFServiceImpl.NUMBER_OF_ITEMS_PER_TOC_PAGE) + 1;
+
+        final int size = this.getTocEntries().size();
+        if ( size <= PDFServiceImpl.getNumberOfItemsPerTocPage(0) ) {
+            return 1;
+        } else {
+            return ((size - PDFServiceImpl.getNumberOfItemsPerTocPage(0)) / PDFServiceImpl.getNumberOfItemsPerTocPage(1)) + 2;
+        }
     }
 
     public List<TocEntry> getEntriesSorted() {
