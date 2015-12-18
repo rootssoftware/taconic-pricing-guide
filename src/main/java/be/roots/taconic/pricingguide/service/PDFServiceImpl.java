@@ -622,9 +622,11 @@ public class PDFServiceImpl implements PDFService {
             ct.setSimpleColumn(new Rectangle(55, 517, iTextUtil.PAGE_SIZE.getWidth() - 45, 575));
             final List<Element> elements = HTMLWorker.parseToList(new StringReader(disclaimer), null);
             final Paragraph p = new Paragraph();
-            p.setFont(iTextUtil.getFontDisclaimer());
             p.setAlignment(Element.ALIGN_JUSTIFIED);
             for ( Element element : elements ) {
+                for ( Chunk chunk : element.getChunks() ) {
+                    chunk.setFont(iTextUtil.getFontDisclaimer());
+                }
                 p.add(element);
             }
             ct.addElement(p);
