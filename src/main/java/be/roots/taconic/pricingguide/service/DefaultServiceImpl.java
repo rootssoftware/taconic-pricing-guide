@@ -34,10 +34,10 @@ public class DefaultServiceImpl implements DefaultService {
     @Value("${url.base}")
     private String baseUrl;
 
-    @Value("${username}")
+    @Value("${url.username}")
     private String userName;
 
-    @Value("${password}")
+    @Value("${url.password}")
     private String password;
 
     public String getBaseUrl() {

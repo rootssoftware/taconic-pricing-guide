@@ -81,7 +81,7 @@ public class Model implements Comparable<Model> {
     }
 
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-    public String getNomenclature() {
+    private String getNomenclature() {
         return nomenclature;
     }
 
@@ -127,16 +127,17 @@ public class Model implements Comparable<Model> {
             final Map<String, Pricing> profitPricing = new HashMap<>();
 
             // loop trough all pricings and note all the available
-            for ( Pricing p : pricing) {
-                if ( p.getCurrency().getIsoCode().equals(contact.getCurrency().getIsoCode())) {
-                    categoryCodes.add ( p.getCategoryCode() );
-                    if ( p.isProfit()) {
-                        profitPricing.put ( p.getCategoryCode(), p );
-                    } else {
-                        nonProfitPricing.put ( p.getCategoryCode(), p );
-                    }
-                }
-            }
+            pricing
+                    .stream()
+                    .filter(p -> p.getCurrency().getIsoCode().equals(contact.getCurrency().getIsoCode()))
+                    .forEachOrdered(p -> {
+                        categoryCodes.add(p.getCategoryCode());
+                        if (p.isProfit()) {
+                            profitPricing.put(p.getCategoryCode(), p);
+                        } else {
+                            nonProfitPricing.put(p.getCategoryCode(), p);
+                        }
+                    });
 
             // for each code; look for the correct pricing
             for ( String categoryCode : categoryCodes ) {

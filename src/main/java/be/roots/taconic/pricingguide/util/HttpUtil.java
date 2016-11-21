@@ -76,7 +76,7 @@ public class HttpUtil {
     }
 
     private static HttpURLConnection getInputStreamFor(String urlAsString, String userName, String password) throws IOException {
-        LOGGER.info(REQUEST_METHOD + "ting data from url: " + urlAsString + " with timeout set to " + CONNECT_TIMEOUT );
+        LOGGER.info(REQUEST_METHOD + "ting data from url: " + urlAsString + " as " + userName + " with timeout set to " + CONNECT_TIMEOUT );
 
         final URL url = new URL(urlAsString);
         final HttpURLConnection con = (HttpURLConnection) url.openConnection();

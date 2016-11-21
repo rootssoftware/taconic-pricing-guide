@@ -26,13 +26,13 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
-import org.joda.time.DateTime;
 
 import javax.mail.MessagingException;
+import java.time.OffsetDateTime;
 
 public interface MailService {
 
     void sendMail ( Contact contact, byte[] pricingGuide ) throws MessagingException;
-    void sendReport(DateTime lastMonth, String filename, byte[] report) throws MessagingException;
+    void sendReport(OffsetDateTime lastMonth, String filename, byte[] report) throws MessagingException;
 
 }

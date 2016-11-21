@@ -42,6 +42,8 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 public class ModelRepositoryImpl implements ModelRepository {
 
@@ -115,11 +117,10 @@ public class ModelRepositoryImpl implements ModelRepository {
 
         if ( ! CollectionUtils.isEmpty(catalog)) {
 
-            final List<Model> all = new ArrayList<>();
-            for ( HashMap entry : catalog ) {
-                all.add ( findOne((String) entry.get("catalog_id")));
-            }
-            return all;
+            return catalog
+                    .stream()
+                    .map(entry -> findOne((String) entry.get("catalog_id")))
+                    .collect(toList());
 
         }
 

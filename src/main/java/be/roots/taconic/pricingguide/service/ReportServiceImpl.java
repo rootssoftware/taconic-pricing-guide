@@ -31,14 +31,16 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,16 +52,24 @@ public class ReportServiceImpl implements ReportService {
     @Value("${report.location}")
     private String reportLocation;
 
+    @PostConstruct
+    public void init() {
+        final File directory = new File(reportLocation);
+        if ( ! directory.exists() ) {
+            directory.mkdirs();
+        }
+    }
+
     @Override
     public void report(Contact contact, List<String> modelIds) throws IOException {
 
         final CSVFormat csvFileFormat = CSVFormat.DEFAULT;
-        final FileWriter fileWriter = new FileWriter(getFileNameFor(new DateTime()), true);
+        final FileWriter fileWriter = new FileWriter(getFileNameFor(OffsetDateTime.now()), true);
         final CSVPrinter csvFilePrinter = new CSVPrinter(fileWriter, csvFileFormat);
 
         final List<String> record = new ArrayList<>();
 
-        record.add(new DateTime().toString(DefaultUtil.FORMAT_TIMESTAMP));
+        record.add(OffsetDateTime.now().format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_TIMESTAMP)));
 
         record.add(contact.getHsId());
         record.add(contact.getSalutation());
@@ -90,12 +100,12 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public DateTime getLastMonth() {
-        return new DateTime().minusMonths(1);
+    public OffsetDateTime getLastMonth() {
+        return OffsetDateTime.now().minusMonths(1);
     }
 
-    private String getFileNameFor(DateTime date) {
-        return reportLocation + "/report-" + date.toString(DefaultUtil.FORMAT_MONTH)+ ".csv";
+    private String getFileNameFor(OffsetDateTime date) {
+        return reportLocation + "/report-" + date.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH))+ ".csv";
     }
 
     @Override

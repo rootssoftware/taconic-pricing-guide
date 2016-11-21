@@ -35,17 +35,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 public class Toc {
 
     public static final String BEFORE_SORT_PREFIX= "AAA";
-    public static final String TOC_SORT_PREFIX = "CCC";
+    private static final String TOC_SORT_PREFIX = "CCC";
     public static final String MODEL_SORT_PREFIX = "MODEL";
     public static final String AFTER_SORT_PREFIX= "ZZZ";
 
-    private List<TocEntry> entries = new ArrayList<>();
+    private final List<TocEntry> entries = new ArrayList<>();
     private int nextPageNumber = 1;
 
-    public List<TocEntry> getEntries() {
+    private List<TocEntry> getEntries() {
         return entries;
     }
 
@@ -104,15 +106,11 @@ public class Toc {
 
     }
 
-    public List<TocEntry> getTocEntries() {
-        final List<TocEntry> contents = new ArrayList<>();
-        for ( TocEntry entry : entries ) {
-            if ( entry.isIncludedInToc() ) {
-                contents.add(entry);
-            }
-        }
-        return contents;
-
+    private List<TocEntry> getTocEntries() {
+        return entries
+                .stream()
+                .filter(TocEntry::isIncludedInToc)
+                .collect(toList());
     }
 
     public int getNumberOfPages() {
@@ -139,23 +137,6 @@ public class Toc {
                 return pageNumber;
             }
             pageNumber+= tocEntry.getNumberOfPages();
-        }
-
-        return -1;
-    }
-
-    public int getLastPageNumberOfModelPages() {
-        final List<TocEntry> contents = getEntriesSorted();
-        int pageNumber = 1;
-        int oldPageNumber = contents.get(0).getOriginalPageNumber();
-        for ( TocEntry tocEntry : contents ) {
-            if ( tocEntry.getSort().startsWith(AFTER_SORT_PREFIX)) {
-                return pageNumber - 1;
-            }
-            if ( oldPageNumber != tocEntry.getOriginalPageNumber() ) {
-                pageNumber+= tocEntry.getNumberOfPages();
-                oldPageNumber = tocEntry.getOriginalPageNumber();
-            }
         }
 
         return -1;

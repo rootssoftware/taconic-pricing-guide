@@ -33,7 +33,7 @@ import com.itextpdf.text.pdf.parser.TextRenderInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class ImageRenderListener implements RenderListener {
+class ImageRenderListener implements RenderListener {
 
     private final static org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(ImageRenderListener.class);
 

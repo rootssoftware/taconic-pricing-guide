@@ -47,6 +47,7 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class PDFServiceImpl implements PDFService {
@@ -109,30 +110,35 @@ public class PDFServiceImpl implements PDFService {
     public byte[] createPricingGuide(Contact contact, List<Model> models) throws IOException, DocumentException {
 
         final Toc tableOfContents = new Toc();
+        int numberOfModelAndTOCPages = 0;
 
         // add all template pages that should be placed before the Model pages
         byte[] guide = iTextUtil.merge(collectPages(pdfTemplate.getBefore(), tableOfContents, Toc.BEFORE_SORT_PREFIX));
 
         // add the "Models" paragraph to the Toc
-        tableOfContents.addEntries(1, Arrays.asList("Models"), null, true, Toc.MODEL_SORT_PREFIX);
+        tableOfContents.addEntries(1, Collections.singletonList("Models"), null, true, Toc.MODEL_SORT_PREFIX);
 
         // add the Model pages to the pdf
-        guide = iTextUtil.merge(guide, createModelPages(contact, models, tableOfContents));
+        final byte[] modelPages = createModelPages(contact, models, tableOfContents);
+        numberOfModelAndTOCPages += iTextUtil.numberOfPages(modelPages);
+        guide = iTextUtil.merge(guide, modelPages);
 
         // add all template pages that should be placed after the Model Pages
         guide = iTextUtil.merge(guide, collectPages(pdfTemplate.getAfter(), tableOfContents, Toc.AFTER_SORT_PREFIX));
 
         // add empty pages for the Table of Contents
-        guide = iTextUtil.merge(guide, addPagesForTableOfContents(tableOfContents));
+        final byte[] addPagesForTableOfContents = addPagesForTableOfContents(tableOfContents);
+        numberOfModelAndTOCPages += iTextUtil.numberOfPages(addPagesForTableOfContents) - 1;
+        guide = iTextUtil.merge(guide, addPagesForTableOfContents);
 
         // reorder the complete PDF into the final sequence
         guide = iTextUtil.organize(guide, tableOfContents);
 
         // fix the background for pages without a template (= Table of Contents)
-        guide = fixBackground(guide, tableOfContents);
+        guide = fixBackground(guide, tableOfContents, numberOfModelAndTOCPages);
 
         // enable the links on the Model pages
-        guide = enableLinkToWebsite(guide, tableOfContents);
+        guide = enableLinkToWebsite(guide, tableOfContents, numberOfModelAndTOCPages);
 
         // add page numbers to all pages
         guide = iTextUtil.setPageNumbers(guide);
@@ -196,11 +202,13 @@ public class PDFServiceImpl implements PDFService {
         // create a PdfPTable for every model (so we can measure the height)
         final List<PdfPTable> modelPageTables = new ArrayList<>();
         Collections.sort(models);
-        for (Model model : models) {
-            if ( model != null ) {
-                modelPageTables.add(createModelPage(contact, model, writer));
-            }
-        }
+        modelPageTables.addAll(
+                models
+                        .stream()
+                        .filter(model -> model != null)
+                        .map(model -> createModelPage(contact, model))
+                        .collect(Collectors.toList())
+        );
 
         // put the PdfPTable Models tables on PDF pages (multiple per page if possible)
         byte[] pages = new byte[]{};
@@ -238,7 +246,7 @@ public class PDFServiceImpl implements PDFService {
             }
 
             // rerender the table (with a valid pdfWriter)
-            document.add(createModelPage(contact, models.get(modelPageTables.indexOf(modelPageTable)), writer));
+            document.add(createModelPage(contact, models.get(modelPageTables.indexOf(modelPageTable))));
             height += modelPageTable.getTotalHeight();
             pageNames.add ( models.get ( modelPageTables.indexOf(modelPageTable) ).getProductNameProcessed() );
 
@@ -264,7 +272,7 @@ public class PDFServiceImpl implements PDFService {
         return pages;
     }
 
-    private byte[] fixBackground(byte[] pdf, Toc tableOfContents) throws IOException, DocumentException {
+    private byte[] fixBackground(byte[] pdf, Toc tableOfContents, int numberOfModelAndTOCPages) throws IOException, DocumentException {
 
         try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
 
@@ -280,10 +288,11 @@ public class PDFServiceImpl implements PDFService {
             final PdfReader reader = new PdfReader(pdf);
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
-            final PdfContentByte tocContent = stamper.getUnderContent(tableOfContents.getFirstPageOfToc());
+            final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
+            final PdfContentByte tocContent = stamper.getUnderContent(firstPageOfToc);
             tocContent.addImage(tocBackgroundImage, 612, 0, 0, 792, 0, 0);
 
-            for ( int pageNumber = tableOfContents.getFirstPageOfToc() + 1; pageNumber <= tableOfContents.getLastPageNumberOfModelPages(); pageNumber ++ ) {
+            for (int pageNumber = firstPageOfToc + 1; pageNumber <= firstPageOfToc + numberOfModelAndTOCPages; pageNumber ++ ) {
 
                 final PdfContentByte content = stamper.getUnderContent(pageNumber);
                 content.addImage(modelPageBackgroundImage, 612, 0, 0, 792, 0, 0);
@@ -306,17 +315,17 @@ public class PDFServiceImpl implements PDFService {
             if ( ! pdfTemplate.isTocTemplate() ) {
                 final byte[] template = templateRepository.findOne(pdfTemplate.getUrl());
                 pdf = iTextUtil.merge(pdf, template);
-                tableOfContents.addEntries(1, Arrays.asList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + (i++) );
+                tableOfContents.addEntries(1, Collections.singletonList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + (i++) );
             }
         }
         return pdf;
     }
 
-    private PdfPTable createModelPage(Contact contact, Model model, PdfWriter pdfWriter) throws IOException, DocumentException {
+    private PdfPTable createModelPage(Contact contact, Model model) {
 
         final PdfPTable pdfPTable = new PdfPTable( new float[] { 40f, 1f, 59f } );
         pdfPTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth());
-        pdfPTable.addCell(cell(buildModelDetailSection(model, pdfWriter)));
+        pdfPTable.addCell(cell(buildModelDetailSection(model)));
         pdfPTable.addCell(cell(new Paragraph()));
         pdfPTable.addCell(cell(buildModelPricingTables(contact, model)));
         return pdfPTable;
@@ -447,7 +456,7 @@ public class PDFServiceImpl implements PDFService {
         return pricingTable;
     }
 
-    private PdfPTable buildModelDetailSection(Model model, PdfWriter pdfWriter) throws IOException, BadElementException {
+    private PdfPTable buildModelDetailSection(Model model) {
 
         final Phrase p = processHtmlCodes(model.getProductNameProcessed(), iTextUtil.getFontModelTitle(), iTextUtil.getFontModelSymbol());
         for ( Chunk c : p.getChunks() ) {
@@ -479,7 +488,7 @@ public class PDFServiceImpl implements PDFService {
 
     }
 
-    private PdfPTable createOrderButton(Model model) throws IOException, BadElementException {
+    private PdfPTable createOrderButton(Model model) {
 
         final Chunk chunk = new Chunk ( "Order on taconic.com", iTextUtil.getFontButton() );
         chunk.setAction(new PdfAction("http://www.taconic.com/start-an-order?modelNumber=" + model.getModelNumber()));
@@ -768,7 +777,7 @@ public class PDFServiceImpl implements PDFService {
 
     }
 
-    private byte[] enableLinkToWebsite(byte[] pdf, Toc tableOfContents) throws IOException, DocumentException {
+    private byte[] enableLinkToWebsite(byte[] pdf, Toc tableOfContents, int numberOfModelAndTOCPages) throws IOException, DocumentException {
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
@@ -776,7 +785,8 @@ public class PDFServiceImpl implements PDFService {
 
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
-            for ( int i = tableOfContents.getFirstPageOfToc(); i <= tableOfContents.getLastPageNumberOfModelPages(); i++ ) {
+            final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
+            for (int i = firstPageOfToc; i <= firstPageOfToc + numberOfModelAndTOCPages; i++ ) {
 
                 final Chunk websiteChunk = new Chunk("..................");
                 websiteChunk.setAction(new PdfAction(websiteLink));

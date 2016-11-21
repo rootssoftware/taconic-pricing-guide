@@ -95,7 +95,7 @@ public class HubSpotServiceImpl implements HubSpotService {
                 }
             }
 
-        } while ( recentContacts.isHasMore() );
+        } while (recentContacts != null && recentContacts.isHasMore());
 
         LOGGER.info("No recent contact information found for: " + hsID );
 
@@ -121,6 +121,7 @@ public class HubSpotServiceImpl implements HubSpotService {
             contact.setCountry(parse(jsonProperties, "country_dd"));
             contact.setPersona(parse(jsonProperties, "hs_persona"));
             contact.setCurrency(Currency.getEnum(parse(jsonProperties, "catalog_currency")));
+            contact.setTherapeuticArea(parse(jsonProperties,"therapeutic_area_form_submissions"));
 
             LOGGER.info("Contact: " + contact.toString());
 

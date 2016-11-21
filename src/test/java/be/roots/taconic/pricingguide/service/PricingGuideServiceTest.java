@@ -30,7 +30,7 @@ import be.roots.taconic.pricingguide.domain.Request;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -38,7 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = PricingGuideApplication.class)
+@SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
 public class PricingGuideServiceTest {
 

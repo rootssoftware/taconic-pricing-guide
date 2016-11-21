@@ -68,7 +68,7 @@ public class RetryRequestJob {
 
     }
 
-    public List<Request> getUnsendRequests() {
+    private List<Request> getUnsendRequests() {
 
         final File[] files = new File(requestRetryLocation).listFiles();
         final List<Request> result = new ArrayList<>();

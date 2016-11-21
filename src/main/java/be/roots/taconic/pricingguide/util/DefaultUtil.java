@@ -28,7 +28,7 @@ package be.roots.taconic.pricingguide.util;
 public class DefaultUtil {
 
     public final static String FORMAT_MONTH = "yyyy-MM";
-    public final static String FORMAT_TIMESTAMP = "yyyy-MM-dd HH:mm:ss:SSS ZZ";
+    public final static String FORMAT_TIMESTAMP = "yyyy-MM-dd HH:mm:ss:SSS xxxxx";
 
     public static final String PRICING_CATEGORY_NON_PROFIT = ", Non-profit";
 

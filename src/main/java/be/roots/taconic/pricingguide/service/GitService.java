@@ -25,7 +25,7 @@ package be.roots.taconic.pricingguide.service;
  *
  */
 
-public interface GitService {
+interface GitService {
 
     String getCommitId();
 

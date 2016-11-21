@@ -26,6 +26,7 @@ package be.roots.taconic.pricingguide.controller;
  */
 
 import be.roots.taconic.pricingguide.domain.Request;
+import be.roots.taconic.pricingguide.service.MonitoringService;
 import be.roots.taconic.pricingguide.service.PricingGuideService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,10 +54,14 @@ public class PricingGuideController {
     @Autowired
     private PricingGuideService pricingGuideService;
 
+    @Autowired
+    private MonitoringService monitoringService;
+
     @RequestMapping(value = "/pricing-guide-build-request", method = RequestMethod.POST)
     public String pricingGuideBuildRequest(@RequestParam("hsID") String hsID, @RequestParam("modelList") List<String> modelList ) throws IOException {
 
         final String id = UUID.randomUUID().toString();
+        monitoringService.start("pricing_guide_build_request", id);
 
         LOGGER.info ( id + " - Request to start building a pricing guide for " + hsID + " based on " + modelList );
 

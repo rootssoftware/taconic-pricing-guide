@@ -43,7 +43,7 @@ public class iTextUtil {
 
     private final static Logger LOGGER = Logger.getLogger(iTextUtil.class);
 
-    public static final int PAGE_MARGIN_TOP = 72;
+    private static final int PAGE_MARGIN_TOP = 72;
     public static final Rectangle PAGE_SIZE = PageSize.LETTER;
     public static final int PAGE_HEIGHT = (int) PAGE_SIZE.getHeight() - ( PAGE_MARGIN_TOP * 2 ) - 20;
 
@@ -170,7 +170,7 @@ public class iTextUtil {
         return FONT_PERSONALIZATION;
     }
 
-    public static Font getFontPageNumber() {
+    private static Font getFontPageNumber() {
         return FONT_PAGE_NUMBER;
     }
 
@@ -405,9 +405,7 @@ public class iTextUtil {
     public static Image getImageFromByteArray(byte[] pdf) {
         try {
             return Image.getInstance(pdf);
-        } catch (BadElementException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (BadElementException | IOException e) {
             e.printStackTrace();
         }
         return null;

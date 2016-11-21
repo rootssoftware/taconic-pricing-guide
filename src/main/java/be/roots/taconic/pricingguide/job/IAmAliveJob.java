@@ -1,4 +1,4 @@
-package be.roots.taconic.pricingguide.util;
+package be.roots.taconic.pricingguide.job;
 
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
@@ -25,14 +25,24 @@ package be.roots.taconic.pricingguide.util;
  *
  */
 
-import java.text.DecimalFormat;
+import be.roots.taconic.pricingguide.service.MonitoringService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-public class IntUtil {
+import javax.mail.MessagingException;
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("0000000000");
+@Component
+public class IAmAliveJob {
 
-    public static String format ( int i ) {
-        return FORMAT.format(i);
+    @Autowired
+    private MonitoringService monitoringService;
+
+    @Scheduled(fixedDelay = 60 * 1000)
+    public void sendIAmAlive() throws MessagingException {
+
+        monitoringService.iAmAlive();
+
     }
 
 }

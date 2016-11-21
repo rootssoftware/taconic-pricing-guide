@@ -33,17 +33,17 @@ import com.itextpdf.text.DocumentException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = PricingGuideApplication.class)
+@SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
 public class MailServiceTest {
 
@@ -64,7 +64,7 @@ public class MailServiceTest {
         contact.setLastName("Dehaen");
         contact.setEmail("koen.dehaen@roots.be");
 
-        List<Model> models = modelRepository.findFor(Arrays.asList("WKY"));
+        List<Model> models = modelRepository.findFor(Collections.singletonList("WKY"));
         byte[] guide = pdfService.createPricingGuide(contact, models);
 
         mailService.sendMail( contact, guide );

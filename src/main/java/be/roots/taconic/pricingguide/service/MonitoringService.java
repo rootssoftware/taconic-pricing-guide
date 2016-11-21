@@ -1,4 +1,4 @@
-package be.roots.taconic.pricingguide.util;
+package be.roots.taconic.pricingguide.service;
 
 /**
  *  This file is part of the Taconic Pricing Guide generator.  This code will
@@ -25,14 +25,15 @@ package be.roots.taconic.pricingguide.util;
  *
  */
 
-import java.text.DecimalFormat;
+import be.roots.taconic.pricingguide.domain.Contact;
+import be.roots.taconic.pricingguide.domain.Model;
 
-public class IntUtil {
+public interface MonitoringService {
 
-    private static final DecimalFormat FORMAT = new DecimalFormat("0000000000");
+    void start(String name, String id);
+    void stop(String name, String id, Contact contact);
 
-    public static String format ( int i ) {
-        return FORMAT.format(i);
-    }
+    void iAmAlive();
 
+    void incrementCounter(Model model, Contact contact);
 }

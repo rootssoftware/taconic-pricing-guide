@@ -38,6 +38,7 @@ public class Contact {
     private Currency currency;
     private String hsId;
     private String persona;
+    private String therapeuticArea;
 
     public String getSalutation() {
         return salutation;
@@ -111,6 +112,14 @@ public class Contact {
         return persona;
     }
 
+    public String getTherapeuticArea() {
+        return therapeuticArea;
+    }
+
+    public void setTherapeuticArea(String therapeuticArea) {
+        this.therapeuticArea = therapeuticArea;
+    }
+
     public JobRole getJobRole() {
         try {
             return JobRole.valueOf(persona.toUpperCase());
@@ -150,6 +159,7 @@ public class Contact {
                 ", company='" + company + '\'' +
                 ", country='" + country + '\'' +
                 ", currency=" + currency +
+                ", therapeuticArea='" + therapeuticArea + '\'' +
                 ", hsId='" + hsId + '\'' +
                 '}';
     }

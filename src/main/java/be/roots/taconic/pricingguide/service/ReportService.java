@@ -26,9 +26,9 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
-import org.joda.time.DateTime;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface ReportService {
@@ -39,7 +39,7 @@ public interface ReportService {
 
     String getLastMonthsReportFileName();
 
-    DateTime getLastMonth();
+    OffsetDateTime getLastMonth();
 
     void archive(String lastMonthsReportFileName);
 

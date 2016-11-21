@@ -27,7 +27,6 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.util.DefaultUtil;
-import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -37,6 +36,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.mail.MessagingException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class MailServiceImpl implements MailService {
@@ -105,7 +106,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void sendReport(DateTime lastMonth, String filename, byte[] report) throws MessagingException {
+    public void sendReport(OffsetDateTime lastMonth, String filename, byte[] report) throws MessagingException {
 
         final MimeMessageHelper helper = new MimeMessageHelper(javaMailSender.createMimeMessage(), true);
 
@@ -121,12 +122,12 @@ public class MailServiceImpl implements MailService {
             helper.setBcc(bccEmail.split(","));
         }
 
-        helper.setSubject(documentTitle + " requests for " + lastMonth.toString(DefaultUtil.FORMAT_MONTH));
+        helper.setSubject(documentTitle + " requests for " + lastMonth.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH)));
 
         final String body =
                 "Dear<br>" +
                 "<br>" +
-                "Attached you find the overview of "+documentTitle+" requests for "+lastMonth.toString(DefaultUtil.FORMAT_MONTH)+".<br>" +
+                "Attached you find the overview of "+documentTitle+" requests for "+lastMonth.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH))+".<br>" +
                 "<br>" +
                 "Taconic Biosciences, Inc.<br>" +
                 "One Hudson City Centre<br>" +

@@ -29,13 +29,13 @@ import javax.validation.constraints.NotNull;
 
 public class TocEntry implements Comparable<TocEntry> {
 
-    private int level;
-    private String name;
-    private int numberOfPages;
-    private int originalPageNumber;
+    private final int level;
+    private final String name;
+    private final int numberOfPages;
+    private final int originalPageNumber;
     private int finalPageNumber = -1;
-    private String sort;
-    private boolean includedInToc;
+    private final String sort;
+    private final boolean includedInToc;
 
     public TocEntry(int level, String name, boolean includedInToc, int originalPageNumber, int numberOfPages, String sort) {
         this.level = level;

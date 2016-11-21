@@ -65,6 +65,9 @@ public class PricingGuideServiceImpl implements PricingGuideService {
     @Autowired
     private ReportService reportService;
 
+    @Autowired
+    private MonitoringService monitoringService;
+
     @Value("${request.retry.location}")
     private String requestRetryLocation;
 
@@ -120,6 +123,13 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         }
 
         LOGGER.info ( request.getId() + " - Pricing guide successfully sent to  " + contact.getEmail() );
+
+        monitoringService.stop("pricing_guide_build_request", request.getId(), contact);
+
+        if (!CollectionUtils.isEmpty(models)) {
+            models.forEach( model -> monitoringService.incrementCounter(model, contact));
+        }
+
     }
 
     private void saveRequestForRetry(Request request) {

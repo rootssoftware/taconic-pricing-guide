@@ -40,7 +40,7 @@ public enum JobRole {
 
     NON_EXISTING_PERSONA("-");
 
-    private String description;
+    private final String description;
 
     JobRole(String description) {
         this.description = description;
