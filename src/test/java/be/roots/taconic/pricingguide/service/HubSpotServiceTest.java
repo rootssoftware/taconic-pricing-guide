@@ -54,7 +54,7 @@ public class HubSpotServiceTest {
     @Test
     public void testGetContactFor() throws IOException {
 
-        final Contact contact = hubSpotService.getContactFor("11a70d1c-281d-4aec-98cf-43b47c79d7fa");
+        final Contact contact = hubSpotService.getContactFor("0868eebe-b7c7-4758-85e3-7e8fd93bba4f");
 
         assertEquals ( "Dr.", contact.getSalutation() );
         assertEquals ( "Koen", contact.getFirstName() );
@@ -62,9 +62,10 @@ public class HubSpotServiceTest {
         assertEquals ( "koen.dehaen@roots.be", contact.getEmail() );
         assertEquals ( "Roots nv", contact.getCompany() );
         assertEquals ( "Belgium", contact.getCountry() );
-        assertEquals ( JobRole.PERSONA_1, contact.getJobRole() );
+        assertEquals ( JobRole.PERSONA_2, contact.getJobRole() );
         assertEquals ( "EUR", contact.getCurrency().getIsoCode() );
         assertEquals ( "Cardiovascular/Metabolic Disease", contact.getTherapeuticArea() );
+        assertEquals ( "141.135.6.193", contact.getRemoteIp() );
 
     }
 

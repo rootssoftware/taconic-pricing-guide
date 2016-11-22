@@ -27,13 +27,17 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Model;
+import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 
 public interface MonitoringService {
 
-    void start(String name, String id);
-    void stop(String name, String id, Contact contact);
+    boolean shouldBeMonitored(String remoteIp);
+
+    void start(String name, String id, String remoteIp, long startTimestamp);
+    void stop(String name, String id, String remoteIp, Contact contact);
 
     void iAmAlive();
 
     void incrementCounter(Model model, Contact contact);
+
 }

@@ -81,6 +81,9 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         LOGGER.info ( request.getId() + " - Received request to create pricing guide for hsID : " + request.getHsId() + ", modelList : " + request.getModelList() );
 
         final Contact contact = hubSpotService.getContactFor(request.getHsId());
+        request.setRemoteIp(contact.getRemoteIp());
+
+        monitoringService.start("pricing_guide_build_request", request.getId(), contact.getRemoteIp(), request.getStartTimestamp());
 
         if ( contact == null ) {
             LOGGER.error(request.getId() + " - Unable to find a Contact for hsID : " + request.getHsId() + ", will save and retry later");
@@ -90,7 +93,7 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
         try {
             LOGGER.info ( request.getId() + " - Report the request in the CSV record " );
-            reportService.report(contact, request.getModelList() );
+            reportService.report(contact, request.getModelList());
         } catch (IOException e) {
             LOGGER.error ( request.getId() + " - Couldn't report the request in the CSV record, still continuing with creating pricing guide ", e );
         }
@@ -124,9 +127,9 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
         LOGGER.info ( request.getId() + " - Pricing guide successfully sent to  " + contact.getEmail() );
 
-        monitoringService.stop("pricing_guide_build_request", request.getId(), contact);
+        monitoringService.stop("pricing_guide_build_request", request.getId(), request.getRemoteIp(), contact);
 
-        if (!CollectionUtils.isEmpty(models)) {
+        if (!CollectionUtils.isEmpty(models) && monitoringService.shouldBeMonitored(contact.getRemoteIp())) {
             models.forEach( model -> monitoringService.incrementCounter(model, contact));
         }
 

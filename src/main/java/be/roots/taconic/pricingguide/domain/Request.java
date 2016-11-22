@@ -31,16 +31,27 @@ public class Request {
 
     private String id;
     private String hsId;
+    private long startTimestamp;
+    private String remoteIp;
     private List<String> modelList;
     private int retryCount = 1;
 
     public Request() {
     }
 
-    public Request(String id, String hsId, List<String> modelList) {
+    public Request(String id, String hsId, long startTimestamp, List<String> modelList) {
         this.id = id;
         this.hsId = hsId;
+        this.startTimestamp = startTimestamp;
         this.modelList = modelList;
+    }
+
+    public String getRemoteIp() {
+        return remoteIp;
+    }
+
+    public void setRemoteIp(String remoteIp) {
+        this.remoteIp = remoteIp;
     }
 
     public String getId() {
@@ -61,6 +72,14 @@ public class Request {
 
     public List<String> getModelList() {
         return modelList;
+    }
+
+    public long getStartTimestamp() {
+        return startTimestamp;
+    }
+
+    public void setStartTimestamp(long startTimestamp) {
+        this.startTimestamp = startTimestamp;
     }
 
     public void setModelList(List<String> modelList) {

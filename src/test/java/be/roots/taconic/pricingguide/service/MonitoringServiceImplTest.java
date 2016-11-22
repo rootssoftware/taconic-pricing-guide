@@ -24,31 +24,31 @@ package be.roots.taconic.pricingguide.service;
  *  For more information, please contact Roots nv at this address: support@roots.be
  *
  */
-
 import be.roots.taconic.pricingguide.PricingGuideApplication;
-import be.roots.taconic.pricingguide.domain.Request;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.io.IOException;
-import java.util.ArrayList;
+import javax.annotation.Resource;
+
+import static org.junit.Assert.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
-public class PricingGuideServiceTest {
+public class MonitoringServiceImplTest {
 
-    @Autowired
-    private PricingGuideService pricingGuideService;
+    @Resource
+    private MonitoringService monitoringService;
 
     @Test
-    public void testUnfoundContact() throws IOException {
+    public void shouldBeMonitored() throws Exception {
 
-        pricingGuideService.buildPricingGuide(new Request("123456789", "not-existing-contact", System.currentTimeMillis(), new ArrayList<>()));
+        assertFalse ( monitoringService.shouldBeMonitored ( "82.22.22.1" ) );
+        assertTrue ( monitoringService.shouldBeMonitored ( "82.22.22.3" ) );
 
     }
 

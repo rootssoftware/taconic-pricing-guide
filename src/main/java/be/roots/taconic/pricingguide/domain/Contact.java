@@ -39,6 +39,7 @@ public class Contact {
     private String hsId;
     private String persona;
     private String therapeuticArea;
+    private String remoteIp;
 
     public String getSalutation() {
         return salutation;
@@ -149,6 +150,14 @@ public class Contact {
         return fullName;
     }
 
+    public String getRemoteIp() {
+        return remoteIp;
+    }
+
+    public void setRemoteIp(String remoteIp) {
+        this.remoteIp = remoteIp;
+    }
+
     @Override
     public String toString() {
         return "Contact{" +
@@ -159,8 +168,10 @@ public class Contact {
                 ", company='" + company + '\'' +
                 ", country='" + country + '\'' +
                 ", currency=" + currency +
-                ", therapeuticArea='" + therapeuticArea + '\'' +
                 ", hsId='" + hsId + '\'' +
+                ", persona='" + persona + '\'' +
+                ", therapeuticArea='" + therapeuticArea + '\'' +
+                ", remoteIp='" + remoteIp + '\'' +
                 '}';
     }
 

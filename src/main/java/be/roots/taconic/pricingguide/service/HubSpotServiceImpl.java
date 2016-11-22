@@ -108,20 +108,22 @@ public class HubSpotServiceImpl implements HubSpotService {
         final String response2 = HttpUtil.readString(url);
         final ObjectMapper hsContactMap = new ObjectMapper();
         final JsonNode contactjson = hsContactMap.readTree(response2);
-        final JsonNode jsonProperties = contactjson.get("properties");
+        final JsonNode contactProperties = contactjson.get("properties");
 
-        if ( jsonProperties  != null ) {
+        if ( contactProperties  != null ) {
 
             final Contact contact = new Contact();
-            contact.setSalutation(parse(jsonProperties, "salutation"));
-            contact.setFirstName(parse(jsonProperties, "firstname"));
-            contact.setLastName(parse(jsonProperties, "lastname"));
-            contact.setEmail(parse(jsonProperties, "email"));
-            contact.setCompany(parse(jsonProperties, "company"));
-            contact.setCountry(parse(jsonProperties, "country_dd"));
-            contact.setPersona(parse(jsonProperties, "hs_persona"));
-            contact.setCurrency(Currency.getEnum(parse(jsonProperties, "catalog_currency")));
-            contact.setTherapeuticArea(parse(jsonProperties,"therapeutic_area_form_submissions"));
+            contact.setSalutation(parse(contactProperties, "salutation"));
+            contact.setFirstName(parse(contactProperties, "firstname"));
+            contact.setLastName(parse(contactProperties, "lastname"));
+            contact.setEmail(parse(contactProperties, "email"));
+            contact.setCompany(parse(contactProperties, "company"));
+            contact.setCountry(parse(contactProperties, "country_dd"));
+            contact.setPersona(parse(contactProperties, "hs_persona"));
+            contact.setCurrency(Currency.getEnum(parse(contactProperties, "catalog_currency")));
+            contact.setTherapeuticArea(parse(contactProperties,"therapeutic_area_form_submissions"));
+
+            contact.setRemoteIp(parse(contactProperties, "ipaddress") );
 
             LOGGER.info("Contact: " + contact.toString());
 

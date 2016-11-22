@@ -60,6 +60,7 @@ public class ReportServiceTest {
         contact.setCountry("Belgium");
         contact.setPersona("persona_1");
         contact.setHsId(UUID.randomUUID().toString());
+        contact.setRemoteIp("127.0.0.1");
 
         final List<String> models = new ArrayList<>();
         models.add ("model1");

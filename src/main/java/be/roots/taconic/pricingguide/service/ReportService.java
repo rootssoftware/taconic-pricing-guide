@@ -33,7 +33,7 @@ import java.util.List;
 
 public interface ReportService {
 
-    void report ( Contact contact, List<String> modelIds ) throws IOException;
+    void report (Contact contact, List<String> modelIds) throws IOException;
 
     byte[] getLastMonthsReport();
 

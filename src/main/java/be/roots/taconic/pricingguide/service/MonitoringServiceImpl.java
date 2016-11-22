@@ -28,6 +28,7 @@ package be.roots.taconic.pricingguide.service;
 import be.roots.mona.client.MonitoringClient;
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Model;
+import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +37,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -55,6 +57,9 @@ public class MonitoringServiceImpl implements MonitoringService {
     @Value("${mona.password}")
     private String monaPassword;
 
+    @Value("#{'${mona.skipIps}'.split(',')}")
+    private List<String> ipsToBeSkipped;
+
     private MonitoringClient mona;
     private final Map<String, String> defaultMetaData = new HashMap<>();
 
@@ -64,32 +69,42 @@ public class MonitoringServiceImpl implements MonitoringService {
         defaultMetaData.put ( "region", region );
     }
 
-    public void start(String name, String uuid ) {
+    @Override
+    public boolean shouldBeMonitored(String remoteIp) {
+        return ! ipsToBeSkipped.contains(remoteIp);
+    }
+
+    @Override
+    public void start(String name, String uuid, String remoteIp, long startTimestamp ) {
         try {
-            mona.startProcess(
-                    name,
-                    uuid,
-                    System.currentTimeMillis(),
-                    60
-            );
+            if ( shouldBeMonitored(remoteIp)) {
+                mona.startProcess(
+                        name,
+                        uuid,
+                        startTimestamp,
+                        60
+                );
+            }
         } catch ( Throwable e ) {
             LOGGER.error(e.getLocalizedMessage(), e);
         }
     }
 
-    public void stop(String name, String uuid, Contact contact) {
+    @Override
+    public void stop(String name, String uuid, String remoteIp, Contact contact) {
         try {
-            mona.stopProcess(
-                    name,
-                    uuid,
-                    System.currentTimeMillis(),
-                    metaData(contact)
-            );
+            if ( shouldBeMonitored(remoteIp)) {
+                mona.stopProcess(
+                        name,
+                        uuid,
+                        System.currentTimeMillis(),
+                        metaData(contact)
+                );
+            }
         } catch ( Throwable e ) {
             LOGGER.error(e.getLocalizedMessage(), e);
         }
     }
-
 
     @Override
     public void iAmAlive() {
@@ -98,7 +113,6 @@ public class MonitoringServiceImpl implements MonitoringService {
         } catch ( Throwable e ) {
             LOGGER.error(e.getLocalizedMessage(), e);
         }
-        mona.set("set", "mlkj");
     }
 
     @Override

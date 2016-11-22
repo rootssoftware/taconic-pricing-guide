@@ -71,6 +71,7 @@ public class ReportServiceImpl implements ReportService {
 
         record.add(OffsetDateTime.now().format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_TIMESTAMP)));
 
+        record.add(contact.getRemoteIp());
         record.add(contact.getHsId());
         record.add(contact.getSalutation());
         record.add(contact.getFirstName());
@@ -84,6 +85,7 @@ public class ReportServiceImpl implements ReportService {
         } else {
             record.add(null);
         }
+        record.add(contact.getTherapeuticArea());
         if ( contact.getCurrency() != null ) {
             record.add(contact.getCurrency().name());
             record.add(contact.getCurrency().getDescription());
