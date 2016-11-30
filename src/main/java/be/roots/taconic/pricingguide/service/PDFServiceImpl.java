@@ -1,28 +1,27 @@
 package be.roots.taconic.pricingguide.service;
 
-/**
- *  This file is part of the Taconic Pricing Guide generator.  This code will
- *  generate a full featured PDF Pricing Guide by using using iText
- *  (http://www.itextpdf.com) based on JSON files.
- *
- *  Copyright (C) 2015  Roots nv
- *  Authors: Koen Dehaen (koen.dehaen@roots.be)
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as
- *  published by the Free Software Foundation, either version 3 of the
- *  License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  For more information, please contact Roots nv at this address: support@roots.be
- *
+/*
+   This file is part of the Taconic Pricing Guide generator.  This code will
+   generate a full featured PDF Pricing Guide by using using iText
+   (http://www.itextpdf.com) based on JSON files.
+
+   Copyright (C) 2015  Roots nv
+   Authors: Koen Dehaen (koen.dehaen@roots.be)
+
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU Affero General Public License as
+   published by the Free Software Foundation, either version 3 of the
+   License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU Affero General Public License for more details.
+
+   You should have received a copy of the GNU Affero General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+   For more information, please contact Roots nv at this address: support@roots.be
  */
 
 import be.roots.taconic.pricingguide.domain.*;
@@ -47,13 +46,16 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class PDFServiceImpl implements PDFService {
 
     private final static Logger LOGGER = Logger.getLogger(PDFServiceImpl.class);
     private final static String DELIMETER = "-!-!-!-!-!-!-!-";
+
+    private static final float COLUMN_RELATIVE_WIDTH_LEFT = 40f;
+    private static final float COLUMN_RELATIVE_WIDTH_MIDDLE = 1f;
+    private static final float COLUMN_RELATIVE_WIDTH_RIGHT = 59f;
 
     @Value("${link.email}")
     private String emailLink;
@@ -202,13 +204,12 @@ public class PDFServiceImpl implements PDFService {
         // create a PdfPTable for every model (so we can measure the height)
         final List<PdfPTable> modelPageTables = new ArrayList<>();
         Collections.sort(models);
-        modelPageTables.addAll(
-                models
-                        .stream()
-                        .filter(model -> model != null)
-                        .map(model -> createModelPage(contact, model))
-                        .collect(Collectors.toList())
-        );
+        models
+                .stream()
+                .filter(Objects::nonNull)
+                .map(model -> createModelPage(contact, model))
+                .forEach(modelPageTables::add)
+                ;
 
         // put the PdfPTable Models tables on PDF pages (multiple per page if possible)
         byte[] pages = new byte[]{};
@@ -315,7 +316,7 @@ public class PDFServiceImpl implements PDFService {
             if ( ! pdfTemplate.isTocTemplate() ) {
                 final byte[] template = templateRepository.findOne(pdfTemplate.getUrl());
                 pdf = iTextUtil.merge(pdf, template);
-                tableOfContents.addEntries(1, Collections.singletonList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + (i++) );
+                tableOfContents.addEntries(1, Collections.singletonList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + IntUtil.format(i++) );
             }
         }
         return pdf;
@@ -323,7 +324,7 @@ public class PDFServiceImpl implements PDFService {
 
     private PdfPTable createModelPage(Contact contact, Model model) {
 
-        final PdfPTable pdfPTable = new PdfPTable( new float[] { 40f, 1f, 59f } );
+        final PdfPTable pdfPTable = new PdfPTable( new float[] {COLUMN_RELATIVE_WIDTH_LEFT, COLUMN_RELATIVE_WIDTH_MIDDLE, COLUMN_RELATIVE_WIDTH_RIGHT} );
         pdfPTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth());
         pdfPTable.addCell(cell(buildModelDetailSection(model)));
         pdfPTable.addCell(cell(new Paragraph()));
@@ -396,6 +397,7 @@ public class PDFServiceImpl implements PDFService {
     private PdfPTable buildModelPricingTables(Contact contact, Model model) {
 
         final PdfPTable table = new PdfPTable(1);
+        table.setSplitLate(false); // this sees to it that if the first table spans over different pages, the first chunck of the pricingTable is shown on the first page
 
         final List<Pricing> validPricings = model.validPricings ( contact );
 
@@ -404,56 +406,73 @@ public class PDFServiceImpl implements PDFService {
             chunk.setAction(new PdfAction(contactUsUrl));
             table.addCell(cell(new Phrase(chunk)));
         } else {
-            for ( Pricing pricing : validPricings ) {
-                table.addCell ( cell ( buildModelPricingTable(pricing) ) );
-            }
+            validPricings.forEach( pricing -> buildModelPricingTable(table, pricing) );
         }
 
         return table;
 
     }
 
-    private PdfPTable buildModelPricingTable(Pricing pricing) {
-        final PdfPTable pricingTable = new PdfPTable(pricing.getNumberOfHeaderItems());
+    private void buildModelPricingTable(PdfPTable table, Pricing pricing) {
 
-        pricingTable.addCell(cell(new Paragraph(pricing.getCategory(), iTextUtil.getFontModelCategory()), pricing.getNumberOfHeaderItems()));
-        pricingTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
+        // build the pricing table title
+        final PdfPTable titleTable = new PdfPTable(1);
+        titleTable.addCell(cell(new Paragraph(pricing.getCategory(), iTextUtil.getFontModelCategory())));
+        titleTable.addCell(cell(new Paragraph(" ")));
 
+        // build the pricing table details
+        final PdfPTable detailsTable = new PdfPTable(pricing.getNumberOfHeaderItems());
+        detailsTable.setHeaderRows(1); // to re-print the header on each page if the table splits over multiple pages
         if ( pricing.isQuantities() ) {
-            pricingTable.addCell(cellH(new Paragraph("Quantity", iTextUtil.getFontModelPricingTitle())));
+            detailsTable.addCell(cellH(new Paragraph("Quantity", iTextUtil.getFontModelPricingTitle())));
         }
         if ( pricing.isAge() ) {
-            pricingTable.addCell(cellH(new Paragraph("Age (weeks)", iTextUtil.getFontModelPricingTitle())));
+            detailsTable.addCell(cellH(new Paragraph("Age (weeks)", iTextUtil.getFontModelPricingTitle())));
         }
         if ( pricing.isMale() ) {
-            pricingTable.addCell(cellH(new Paragraph("Male", iTextUtil.getFontModelPricingTitle())));
+            detailsTable.addCell(cellH(new Paragraph("Male", iTextUtil.getFontModelPricingTitle())));
         }
         if ( pricing.isFemale() ) {
-            pricingTable.addCell(cellH(new Paragraph("Female", iTextUtil.getFontModelPricingTitle())));
+            detailsTable.addCell(cellH(new Paragraph("Female", iTextUtil.getFontModelPricingTitle())));
         }
         boolean invert = false;
         for ( Line line : pricing.getLines() ) {
             if ( pricing.isQuantities() ) {
-                pricingTable.addCell(cellD(new Paragraph(line.getQuantity(), iTextUtil.getFontModelPricingData()), invert));
+                detailsTable.addCell(cellD(new Paragraph(line.getQuantity(), iTextUtil.getFontModelPricingData()), invert));
             }
             if ( pricing.isAge() ) {
-                pricingTable.addCell(cellD(new Paragraph(line.getAge(), iTextUtil.getFontModelPricingData()), invert));
+                detailsTable.addCell(cellD(new Paragraph(line.getAge(), iTextUtil.getFontModelPricingData()), invert));
             }
             if ( pricing.isMale() ) {
-                pricingTable.addCell(cellD(new Paragraph(line.getMale(), iTextUtil.getFontModelPricingData()), invert));
+                detailsTable.addCell(cellD(new Paragraph(line.getMale(), iTextUtil.getFontModelPricingData()), invert));
             }
             if ( pricing.isFemale() ) {
-                pricingTable.addCell(cellD(new Paragraph(line.getFemale(), iTextUtil.getFontModelPricingData()), invert));
+                detailsTable.addCell(cellD(new Paragraph(line.getFemale(), iTextUtil.getFontModelPricingData()), invert));
             }
             invert = !invert;
         }
 
         if ( ! StringUtils.isEmpty(pricing.getMessage())) {
-            pricingTable.addCell(cell(new Paragraph (pricing.getMessage(), iTextUtil.getFontModelPricingMessage()), pricing.getNumberOfHeaderItems()));
+            detailsTable.addCell(cell(new Paragraph (pricing.getMessage(), iTextUtil.getFontModelPricingMessage()), pricing.getNumberOfHeaderItems()));
         }
-        pricingTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
+        detailsTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
 
-        return pricingTable;
+        // combine both tables into one table
+        final PdfPTable modelTable = new PdfPTable(1);
+        modelTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
+        modelTable.addCell ( cell ( titleTable ) );
+        modelTable.addCell ( cell ( detailsTable ) );
+
+        if ( modelTable.getTotalHeight() < iTextUtil.PAGE_HEIGHT ) {
+            // if the pricing table can fit on a page, then keep it together and if necessary break to the next page
+            modelTable.keepRowsTogether(0);
+        } else {
+            // if the pricing table only fits on multiple pages, then ask to split as fast as it can, and keep the first part on the first table
+            modelTable.setSplitLate(false);
+        }
+
+        final PdfPCell cell = cell(modelTable);
+        table.addCell (cell);
     }
 
     private PdfPTable buildModelDetailSection(Model model) {
