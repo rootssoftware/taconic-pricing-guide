@@ -27,8 +27,8 @@ package be.roots.taconic.pricingguide.domain;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class PDFTemplates {
 
@@ -85,16 +85,11 @@ public class PDFTemplates {
 
     @JsonIgnore
     public Template getTocTemplate() {
-        final List<Template> allTemplates = new ArrayList<>();
-        allTemplates.addAll(before);
-        allTemplates.addAll(after);
-
-        for ( Template template : allTemplates ) {
-            if ( template.isTocTemplate() ) {
-                return template;
-            }
-        }
-
-        return null;
+        return Stream
+                .concat ( before.stream(), after.stream() )
+                .filter (Template::isTocTemplate)
+                .findFirst()
+                .orElse(null);
     }
+
 }

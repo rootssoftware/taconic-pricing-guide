@@ -750,7 +750,7 @@ public class PDFServiceImpl implements PDFService {
                     tocEntryNumber++;
 
                     // take the right TOC page to stamp the TOC entry on (needed for TOC's with multiple pages)
-                    if (tocEntryNumber == getNumberOfItemsPerTocPage(0) ||
+                    if (tocEntryNumber == getNumberOfItemsPerTocPage(0) + 1 ||
                             (tocEntryNumber > getNumberOfItemsPerTocPage(0) &&
                              (tocEntryNumber - getNumberOfItemsPerTocPage(0)) % getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) == 0)) {
                         currentTocPage++;
@@ -774,8 +774,8 @@ public class PDFServiceImpl implements PDFService {
                     }
 
                     int y;
-                    if (tocEntryNumber < getNumberOfItemsPerTocPage(0)) {
-                        y = 460 - (16 * (tocEntryNumber % getNumberOfItemsPerTocPage(0)));
+                    if (tocEntryNumber <= getNumberOfItemsPerTocPage(0)) {
+                        y = 460 - (16 * tocEntryNumber);
                     } else {
                         y = 680 - (16 * ((tocEntryNumber - getNumberOfItemsPerTocPage(0)) % getNumberOfItemsPerTocPage(currentTocPage - firstTocPage)));
                     }
@@ -801,7 +801,6 @@ public class PDFServiceImpl implements PDFService {
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
             final PdfReader reader = new PdfReader(pdf);
-
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
             final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
@@ -834,7 +833,7 @@ public class PDFServiceImpl implements PDFService {
     }
 
     public static int getNumberOfItemsPerTocPage(int pageNumber) {
-        return pageNumber == 0 ? 25 : 39;
+        return pageNumber == 0 ? 24 : 39;
     }
 
 }
