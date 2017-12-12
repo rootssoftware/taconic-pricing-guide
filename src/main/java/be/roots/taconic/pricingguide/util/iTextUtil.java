@@ -46,9 +46,10 @@ public class iTextUtil {
     public static final Rectangle PAGE_SIZE = PageSize.LETTER;
     public static final int PAGE_HEIGHT = (int) PAGE_SIZE.getHeight() - ( PAGE_MARGIN_TOP * 2 ) - 20;
 
-    private static final Font FONT_COVER_TEXT;
     private static final Font FONT_COVER_PRICINGGUIDE;
     private static final Font FONT_COVER_YEAR;
+    private static final Font FONT_COVER_CURRENCY;
+    private static final Font FONT_COVER_TRIANGLE;
 
     private static final Font FONT_PERSONALIZATION;
     private static final Font FONT_DISCLAIMER;
@@ -73,31 +74,47 @@ public class iTextUtil {
 
     private static final BaseColor PURPLE;
     private static final BaseColor SILVER;
-    private static final BaseColor TACONIC_RED;
+    private static final BaseColor TACONIC_BUTTON;
+    private static final BaseColor TRIANGLE;
+    private static final BaseColor GREEN;
+    private static final BaseColor GREEN_INVERT;
 
     static {
 
-        PURPLE = new BaseColor(93, 32, 91);
-        SILVER = new BaseColor(239, 239, 239);
-        TACONIC_RED = new BaseColor(237, 32, 40);
+        PURPLE = new BaseColor(0x5d, 0x20, 0x5b);
+        TACONIC_BUTTON = new BaseColor(0xa8, 0x19, 0x3f);
+        SILVER = new BaseColor(0xef, 0xef, 0xef);
+        TRIANGLE = new BaseColor(0xf4, 0x24, 0x34);
+        GREEN = new BaseColor ( 0x32, 0x80, 0x90 );
+        GREEN_INVERT = new BaseColor ( 0xd9, 0xe8, 0xeb );
 
+        BaseFont boldFont = null;
         BaseFont lightFont = null;
+        BaseFont xlightFont = null;
         BaseFont mediumFont = null;
+        BaseFont wingdings = null;
 
         try {
 
+            boldFont = BaseFont.createFont("GothamSSm-Bold.otf", BaseFont.WINANSI, BaseFont.EMBEDDED);
+            boldFont.setSubset(false);
             lightFont = BaseFont.createFont("GothamSSm-Light.otf", BaseFont.WINANSI, BaseFont.EMBEDDED);
             lightFont.setSubset(false);
+            xlightFont = BaseFont.createFont("GothamSSm-XLight.otf", BaseFont.WINANSI, BaseFont.EMBEDDED);
+            xlightFont.setSubset(false);
             mediumFont = BaseFont.createFont("GothamSSm-Medium.otf", BaseFont.WINANSI, BaseFont.EMBEDDED);
-            lightFont.setSubset(false);
+            mediumFont.setSubset(false);
+            wingdings = BaseFont.createFont("Wingdings3Regular.ttf", BaseFont.WINANSI, BaseFont.EMBEDDED);
+            wingdings.setSubset(false);
 
         } catch (DocumentException | IOException e) {
             LOGGER.error(e.getLocalizedMessage(), e);
         }
 
-        FONT_COVER_TEXT = new Font ( lightFont, 18, Font.NORMAL, TACONIC_RED);
-        FONT_COVER_PRICINGGUIDE = new Font ( lightFont, 24, Font.NORMAL, PURPLE);
-        FONT_COVER_YEAR = new Font ( lightFont, 38, Font.NORMAL, PURPLE);
+        FONT_COVER_PRICINGGUIDE = new Font ( boldFont, 30, Font.NORMAL, PURPLE);
+        FONT_COVER_YEAR = new Font ( xlightFont, 105, Font.NORMAL, PURPLE);
+        FONT_COVER_CURRENCY = new Font ( mediumFont, 14, Font.NORMAL, PURPLE);
+        FONT_COVER_TRIANGLE = new Font ( wingdings, 14, Font.NORMAL, TRIANGLE);
 
         FONT_PERSONALIZATION = new Font ( mediumFont, 12, Font.NORMAL, BaseColor.DARK_GRAY);
         FONT_DISCLAIMER = new Font ( lightFont, 10, Font.NORMAL, BaseColor.DARK_GRAY);
@@ -133,12 +150,24 @@ public class iTextUtil {
         return SILVER;
     }
 
-    public static BaseColor getTaconicRed() {
-        return TACONIC_RED;
+    public static BaseColor getTaconicButton() {
+        return TACONIC_BUTTON;
     }
 
-    public static Font getFontCoverText() {
-        return FONT_COVER_TEXT;
+    public static BaseColor getHeaderColor() {
+        return GREEN;
+    }
+
+    public static BaseColor getRowInvertColor() {
+        return GREEN_INVERT;
+    }
+
+    public static Font getFontCoverCurrency() {
+        return FONT_COVER_CURRENCY;
+    }
+
+    public static Font getFontCoverTriangle() {
+        return FONT_COVER_TRIANGLE;
     }
 
     public static Font getFontCoverPricingguide() {

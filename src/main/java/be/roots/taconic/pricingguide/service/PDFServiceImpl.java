@@ -51,11 +51,12 @@ import java.util.List;
 public class PDFServiceImpl implements PDFService {
 
     private final static Logger LOGGER = Logger.getLogger(PDFServiceImpl.class);
-    private final static String DELIMETER = "-!-!-!-!-!-!-!-";
+    private final static String DELIMITER = "-!-!-!-!-!-!-!-";
 
     private static final float COLUMN_RELATIVE_WIDTH_LEFT = 40f;
     private static final float COLUMN_RELATIVE_WIDTH_MIDDLE = 1f;
     private static final float COLUMN_RELATIVE_WIDTH_RIGHT = 59f;
+    private static final float LEFT_MARGIN_COVER_TITLE = 85f;
 
     @Value("${link.email}")
     private String emailLink;
@@ -74,12 +75,6 @@ public class PDFServiceImpl implements PDFService {
 
     @Value("${cover.title.2}")
     private String coverTitle2;
-
-    @Value("${cover.title.3}")
-    private String coverTitle3;
-
-    @Value("${cover.title.4}")
-    private String coverTitle4;
 
     @Value("${disclaimer}")
     private String disclaimer;
@@ -277,26 +272,32 @@ public class PDFServiceImpl implements PDFService {
 
         try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
 
-            final byte[] tocTemplate = templateRepository.findOne (pdfTemplate.getTocTemplate().getUrl() );
-            final byte[] modelPageTemplate = templateRepository.findOne (pdfTemplate.getModel().getUrl() );
+            final byte[] tocTemplate = templateRepository.findOne ( pdfTemplate.getTocTemplate().getUrl() );
+            final byte[] modelPageTemplate = templateRepository.findOne ( pdfTemplate.getModel().getUrl() );
 
             final Image tocBackgroundImage = iTextUtil.getImageFromPdf(tocTemplate);
             tocBackgroundImage.setAbsolutePosition(0, 0);
+            tocBackgroundImage.setInverted(false);
 
             final Image modelPageBackgroundImage = iTextUtil.getImageFromPdf(modelPageTemplate);
             modelPageBackgroundImage.setAbsolutePosition(0, 0);
+            modelPageBackgroundImage.setInverted(false);
 
             final PdfReader reader = new PdfReader(pdf);
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
             final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
             final PdfContentByte tocContent = stamper.getUnderContent(firstPageOfToc);
-            tocContent.addImage(tocBackgroundImage, 612, 0, 0, 792, 0, 0);
+
+            final float pageWidth = reader.getPageSize(1).getWidth();
+            final float pageHeight = tocBackgroundImage.getHeight() / ( tocBackgroundImage.getHeight() / reader.getPageSize(1).getHeight()  );
+
+            tocContent.addImage(tocBackgroundImage, pageWidth, 0, 0, pageHeight, 0, 0);
 
             for (int pageNumber = firstPageOfToc + 1; pageNumber <= firstPageOfToc + numberOfModelAndTOCPages; pageNumber ++ ) {
 
                 final PdfContentByte content = stamper.getUnderContent(pageNumber);
-                content.addImage(modelPageBackgroundImage, 612, 0, 0, 792, 0, 0);
+                content.addImage(modelPageBackgroundImage, pageWidth, 0, 0, pageHeight, 0, 0);
 
             }
 
@@ -326,9 +327,23 @@ public class PDFServiceImpl implements PDFService {
 
         final PdfPTable pdfPTable = new PdfPTable( new float[] {COLUMN_RELATIVE_WIDTH_LEFT, COLUMN_RELATIVE_WIDTH_MIDDLE, COLUMN_RELATIVE_WIDTH_RIGHT} );
         pdfPTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth());
-        pdfPTable.addCell(cell(buildModelDetailSection(model)));
+        final PdfPTable modelPricingTables = buildModelPricingTables(contact, model);
+        modelPricingTables.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
+        int numberOfPages = (int) Math.ceil(modelPricingTables.getTotalHeight() / (float) iTextUtil.PAGE_HEIGHT);
+        if (numberOfPages > 1) {
+            final PdfPTable modelDetailSectionTable = new PdfPTable(1);
+            modelDetailSectionTable.setTotalWidth(COLUMN_RELATIVE_WIDTH_LEFT);
+            for (int i = 0; i < numberOfPages; i++) {
+                PdfPCell cell = cell(buildModelDetailSection(model));
+                cell.setFixedHeight(iTextUtil.PAGE_HEIGHT + 1);
+                modelDetailSectionTable.addCell(cell);
+            }
+            pdfPTable.addCell(cell(modelDetailSectionTable));
+        } else {
+            pdfPTable.addCell(cell(buildModelDetailSection(model)));
+        }
         pdfPTable.addCell(cell(new Paragraph()));
-        pdfPTable.addCell(cell(buildModelPricingTables(contact, model)));
+        pdfPTable.addCell(cell(modelPricingTables));
         return pdfPTable;
 
     }
@@ -347,14 +362,14 @@ public class PDFServiceImpl implements PDFService {
         if ( ! StringUtils.isEmpty( name ) ) {
 
             for ( String[] alphabet : GreekAlphabet.getAlphabet() ) {
-                name = name.replaceAll(alphabet[0], DELIMETER + alphabet[0] + DELIMETER );
+                name = name.replaceAll(alphabet[0], DELIMITER + alphabet[0] + DELIMITER);
             }
-            name = name.replaceAll("<sup>|<SUP>", DELIMETER + "<sup>" );
-            name = name.replaceAll("</sup>|</SUP>", DELIMETER );
-            name = name.replaceAll("<i>|<I>|<em>|<EM>", DELIMETER + "<i>" );
-            name = name.replaceAll("</i>|</I>|</em>|</EM>", DELIMETER + "</i>" );
+            name = name.replaceAll("<sup>|<SUP>", DELIMITER + "<sup>" );
+            name = name.replaceAll("</sup>|</SUP>", DELIMITER);
+            name = name.replaceAll("<i>|<I>|<em>|<EM>", DELIMITER + "<i>" );
+            name = name.replaceAll("</i>|</I>|</em>|</EM>", DELIMITER + "</i>" );
 
-            final String[] tokens = name.split(DELIMETER);
+            final String[] tokens = name.split(DELIMITER);
             for ( String token : tokens ) {
 
                 String text = token;
@@ -513,7 +528,7 @@ public class PDFServiceImpl implements PDFService {
         chunk.setAction(new PdfAction("http://www.taconic.com/start-an-order?modelNumber=" + model.getModelNumber()));
 
         final PdfPCell cell = cell(new Phrase(chunk));
-        cell.setBackgroundColor(iTextUtil.getTaconicRed());
+        cell.setBackgroundColor(iTextUtil.getTaconicButton());
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setPaddingTop(5);
@@ -572,14 +587,14 @@ public class PDFServiceImpl implements PDFService {
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
         if ( invert ) {
-            cell.setBackgroundColor(iTextUtil.getSilver());
+            cell.setBackgroundColor(iTextUtil.getRowInvertColor());
         }
         return cell;
     }
 
     private PdfPCell cellH ( Phrase p ) {
         final PdfPCell cell = new PdfPCell(p);
-        cell.setBackgroundColor(iTextUtil.getPurple());
+        cell.setBackgroundColor(iTextUtil.getHeaderColor());
         cell.setPadding(5f);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -605,19 +620,25 @@ public class PDFServiceImpl implements PDFService {
 
             text.beginText();
 
-            text.setColorFill(iTextUtil.getFontCoverText().getColor());
-            text.setFontAndSize(iTextUtil.getFontCoverText().getBaseFont(), iTextUtil.getFontCoverText().getSize());
-            text.showTextAligned(Element.ALIGN_RIGHT, coverTitle1, text.getPdfDocument().getPageSize().getWidth() - 15, 195, 0);
-            text.showTextAligned(Element.ALIGN_RIGHT, coverTitle2, text.getPdfDocument().getPageSize().getWidth() - 15, 175, 0);
-            text.showTextAligned(Element.ALIGN_RIGHT, contact.getCurrency().getTitlePageDescription(), text.getPdfDocument().getPageSize().getWidth() - 15, 80, 0);
-
             text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
-            text.showTextAligned(Element.ALIGN_RIGHT, coverTitle3, text.getPdfDocument().getPageSize().getWidth() - 15, 145, 0);
+            text.setCharacterSpacing(-1f);
+            text.showTextAligned(Element.ALIGN_LEFT, coverTitle1, LEFT_MARGIN_COVER_TITLE, 195, 0);
 
             text.setColorFill(iTextUtil.getFontCoverYear().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverYear().getBaseFont(), iTextUtil.getFontCoverYear().getSize());
-            text.showTextAligned(Element.ALIGN_RIGHT, coverTitle4, text.getPdfDocument().getPageSize().getWidth() - 15, 105, 0);
+            text.setCharacterSpacing(-12f);
+            text.showTextAligned(Element.ALIGN_LEFT, coverTitle2, LEFT_MARGIN_COVER_TITLE, 105, 0);
+
+            text.setColorFill(iTextUtil.getFontCoverTriangle().getColor());
+            text.setFontAndSize(iTextUtil.getFontCoverTriangle().getBaseFont(), iTextUtil.getFontCoverTriangle().getSize());
+            text.setCharacterSpacing(0f);
+            text.showTextAligned(Element.ALIGN_LEFT, "u", LEFT_MARGIN_COVER_TITLE, 80, 0);
+
+            text.setColorFill(iTextUtil.getFontCoverCurrency().getColor());
+            text.setFontAndSize(iTextUtil.getFontCoverCurrency().getBaseFont(), iTextUtil.getFontCoverCurrency().getSize());
+            text.setCharacterSpacing(0f);
+            text.showTextAligned(Element.ALIGN_LEFT, contact.getCurrency().getTitlePageDescription(), LEFT_MARGIN_COVER_TITLE + 15, 80, 0);
 
             text.endText();
 
@@ -752,7 +773,7 @@ public class PDFServiceImpl implements PDFService {
                     // take the right TOC page to stamp the TOC entry on (needed for TOC's with multiple pages)
                     if (tocEntryNumber == getNumberOfItemsPerTocPage(0) + 1 ||
                             (tocEntryNumber > getNumberOfItemsPerTocPage(0) &&
-                             (tocEntryNumber - getNumberOfItemsPerTocPage(0)) % getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) == 0)) {
+                             (tocEntryNumber - getNumberOfItemsPerTocPage(0)) % ( getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1) == 0)) {
                         currentTocPage++;
                         canvas = stamper.getOverContent(currentTocPage);
                     }
@@ -777,7 +798,7 @@ public class PDFServiceImpl implements PDFService {
                     if (tocEntryNumber <= getNumberOfItemsPerTocPage(0)) {
                         y = 460 - (16 * tocEntryNumber);
                     } else {
-                        y = 680 - (16 * ((tocEntryNumber - getNumberOfItemsPerTocPage(0)) % getNumberOfItemsPerTocPage(currentTocPage - firstTocPage)));
+                        y = 680 - (16 * ((tocEntryNumber - getNumberOfItemsPerTocPage(0)) % ( getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1 )));
                     }
 
                     final ColumnText ct = new ColumnText(canvas);
@@ -806,19 +827,19 @@ public class PDFServiceImpl implements PDFService {
             final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
             for (int i = firstPageOfToc; i <= firstPageOfToc + numberOfModelAndTOCPages; i++ ) {
 
-                final Chunk websiteChunk = new Chunk("..................");
+                final Chunk websiteChunk = new Chunk(".....................");
                 websiteChunk.setAction(new PdfAction(websiteLink));
 
                 ColumnText ct = new ColumnText(stamper.getUnderContent(i));
-                ct.setSimpleColumn(335, 10, 400, 35);
+                ct.setSimpleColumn(335, 25, 140, 50);
                 ct.addText(new Phrase(websiteChunk));
                 ct.go();
 
-                final Chunk emailChunk = new Chunk(".........................................");
+                final Chunk emailChunk = new Chunk("..............................");
                 emailChunk.setAction(new PdfAction(emailLink));
 
                 ct = new ColumnText(stamper.getUnderContent(i));
-                ct.setSimpleColumn(240, 10, 330, 35);
+                ct.setSimpleColumn(295, 12, 450, 37);
                 ct.addText(new Phrase(emailChunk));
                 ct.go();
 
@@ -833,7 +854,7 @@ public class PDFServiceImpl implements PDFService {
     }
 
     public static int getNumberOfItemsPerTocPage(int pageNumber) {
-        return pageNumber == 0 ? 24 : 39;
+        return pageNumber == 0 ? 24 : 38;
     }
 
 }

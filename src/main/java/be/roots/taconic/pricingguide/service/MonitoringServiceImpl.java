@@ -24,7 +24,9 @@ package be.roots.taconic.pricingguide.service;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
+import be.roots.mona.client.DefaultMetrics;
 import be.roots.mona.client.MonitoringClient;
+import be.roots.mona.client.TaconicMonitoringClient;
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Model;
 import org.slf4j.Logger;
@@ -58,12 +60,12 @@ public class MonitoringServiceImpl implements MonitoringService {
     @Value("#{'${mona.skipIps}'.split(',')}")
     private List<String> ipsToBeSkipped;
 
-    private MonitoringClient mona;
+    private TaconicMonitoringClient mona;
     private final Map<String, String> defaultMetaData = new HashMap<>();
 
     @PostConstruct
     public void init() {
-        mona = new MonitoringClient( environment, monaUsername, monaPassword );
+        mona = new TaconicMonitoringClient( region, environment, monaUsername, monaPassword );
         defaultMetaData.put ( "region", region );
     }
 
@@ -105,9 +107,9 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     @Override
-    public void iAmAlive() {
+    public void sendAlive() {
         try {
-            mona.incrementCounter("i_am_alive", defaultMetaData);
+            DefaultMetrics.sendAlive(mona, defaultMetaData);
         } catch ( Throwable e ) {
             LOGGER.error(e.getLocalizedMessage(), e);
         }

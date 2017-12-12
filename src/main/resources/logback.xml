@@ -3,7 +3,7 @@
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</Pattern>
+            <Pattern>%date{ISO8601} [%thread] [%level] in %logger - %msg %n</Pattern>
         </layout>
     </appender>
 
@@ -13,7 +13,7 @@
             <FileNamePattern>/opt/pricingguide/log/console.%d{yyyy-MM-dd}.log</FileNamePattern>
         </rollingPolicy>
         <layout class="ch.qos.logback.classic.PatternLayout">
-            <Pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</Pattern>
+            <Pattern>%date{ISO8601} [%thread] [%level] in %logger - %msg %n</Pattern>
         </layout>
     </appender>
 

@@ -34,7 +34,7 @@ public interface MonitoringService {
     void start(String name, String id, String remoteIp, long startTimestamp);
     void stop(String name, String id, String remoteIp, Contact contact);
 
-    void iAmAlive();
+    void sendAlive();
 
     void incrementCounter(Model model, Contact contact);
 

@@ -41,6 +41,16 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class MailServiceImpl implements MailService {
 
+    private static final String ADDRESS_LINE =
+            "Taconic Biosciences, Inc.<br/>" +
+            "1 Discovery Drive<br/>" +
+            "Suite 304<br/>" +
+            "Rensselaer, NY 12144<br/>" +
+            "North America +1 888 822-6642<br/>" +
+            "Europe +45 70 23 04 05<br/>" +
+            "<a href=\"mailto:info@taconic.com\">info@taconic.com</a><br/>" +
+            "<a href=\"http://www.taconic.com\">www.taconic.com</a>";
+
     @Value("${email.test}")
     private String testEmail;
 
@@ -82,19 +92,13 @@ public class MailServiceImpl implements MailService {
         helper.setSubject("Your " + documentTitle);
 
         final String body =
-                "Dear "+ contact.getFullName() +",<br>" +
-                "<br>" +
-                "Your "+documentTitle+" is attached.<br>" +
-                "<br>" +
-                "Please <a href=\"http:www.taconic.com/customer-service/contact-us\">contact us</a> for any additional information.<br>" +
-                "<br>" +
-                "Taconic Biosciences, Inc.<br>" +
-                "One Hudson City Centre<br>" +
-                "Hudson, New York 12534<br>" +
-                "North America +1 888 822-6642<br>" +
-                "Europe +45 70 23 04 05<br>" +
-                "info@taconic.com<br>" +
-                "www.taconic.com";
+                "Dear "+ contact.getEmailGreeting() +",<br/>" +
+                "<br/>" +
+                "Your "+documentTitle+" is attached.<br/>" +
+                "<br/>" +
+                "Please <a href=\"http://www.taconic.com/customer-service/contact-us\">contact us</a> for any additional information.<br/>" +
+                "<br/>" +
+                ADDRESS_LINE;
 
         helper.setText(body, true);
 
@@ -124,17 +128,11 @@ public class MailServiceImpl implements MailService {
         helper.setSubject(documentTitle + " requests for " + lastMonth.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH)));
 
         final String body =
-                "Dear<br>" +
-                "<br>" +
-                "Attached you find the overview of "+documentTitle+" requests for "+lastMonth.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH))+".<br>" +
-                "<br>" +
-                "Taconic Biosciences, Inc.<br>" +
-                "One Hudson City Centre<br>" +
-                "Hudson, New York 12534<br>" +
-                "North America +1 888 822-6642<br>" +
-                "Europe +45 70 23 04 05<br>" +
-                "info@taconic.com<br>" +
-                "www.taconic.com";
+                "Dear,<br/>" +
+                "<br/>" +
+                "Attached you find the overview of " + documentTitle + " requests for " + lastMonth.format(DateTimeFormatter.ofPattern(DefaultUtil.FORMAT_MONTH)) + ".<br/>" +
+                "<br/>" +
+                ADDRESS_LINE;
 
         helper.setText(body, true);
 

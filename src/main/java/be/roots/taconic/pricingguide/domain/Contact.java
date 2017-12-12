@@ -27,6 +27,12 @@ package be.roots.taconic.pricingguide.domain;
 
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
+
 public class Contact {
 
     private String salutation;
@@ -129,25 +135,16 @@ public class Contact {
         }
     }
 
-    public String getFullName() {
-        String fullName = "";
-        if (! StringUtils.isEmpty(getSalutation())) {
-            fullName += getSalutation();
-        }
-        if (! StringUtils.isEmpty(getFirstName())) {
-            if (! StringUtils.isEmpty(fullName)) {
-                fullName += " ";
-            }
-            fullName += getFirstName();
-        }
-        if (! StringUtils.isEmpty(getLastName())) {
-            if (! StringUtils.isEmpty(fullName)) {
-                fullName += " ";
-            }
-            fullName += getLastName();
-        }
+    public String getEmailGreeting() {
+        return Stream.of(getSalutation(), getLastName())
+                .filter(StringUtils::hasText)
+                .collect(joining(" "));
+    }
 
-        return fullName;
+    public String getFullName() {
+        return Stream.of(getSalutation(), getFirstName(), getLastName())
+                .filter(StringUtils::hasText)
+                .collect(joining(" "));
     }
 
     public String getRemoteIp() {

@@ -26,6 +26,7 @@ package be.roots.taconic.pricingguide.job;
 
 import be.roots.taconic.pricingguide.service.MonitoringService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -37,11 +38,9 @@ public class IAmAliveJob {
     @Autowired
     private MonitoringService monitoringService;
 
-    @Scheduled(fixedDelay = 60 * 1000)
+    @Scheduled(fixedRate = 60 * 1000 )
     public void sendIAmAlive() throws MessagingException {
-
-        monitoringService.iAmAlive();
-
+        monitoringService.sendAlive();
     }
 
 }

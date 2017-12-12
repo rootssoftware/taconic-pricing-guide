@@ -30,14 +30,12 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.apache.tomcat.jni.Local;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -116,10 +114,15 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public byte[] getLastMonthsReport() {
-        try {
-            return IOUtils.toByteArray(new FileInputStream(getLastMonthsReportFileName()));
-        } catch (IOException e) {
-            LOGGER.error ( "Couldn't read last months report " + getLastMonthsReportFileName(), e );
+        File file = new File(getLastMonthsReportFileName());
+        if(file.exists()) {
+            try {
+                return IOUtils.toByteArray(new FileInputStream(getLastMonthsReportFileName()));
+            } catch (IOException e) {
+                LOGGER.error("Couldn't read last months report " + getLastMonthsReportFileName(), e);
+            }
+        } else {
+            LOGGER.info("Last months report does not exist.");
         }
         return null;
     }

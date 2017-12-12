@@ -80,15 +80,16 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         LOGGER.info ( request.getId() + " - Received request to create pricing guide for hsID : " + request.getHsId() + ", modelList : " + request.getModelList() );
 
         final Contact contact = hubSpotService.getContactFor(request.getHsId());
-        request.setRemoteIp(contact.getRemoteIp());
-
-        monitoringService.start("pricing_guide_build_request", request.getId(), contact.getRemoteIp(), request.getStartTimestamp());
 
         if ( contact == null ) {
             LOGGER.error(request.getId() + " - Unable to find a Contact for hsID : " + request.getHsId() + ", will save and retry later");
             saveRequestForRetry ( request );
             return;
         }
+
+        request.setRemoteIp(contact.getRemoteIp());
+        monitoringService.start("pricing_guide_build_request", request.getId(), contact.getRemoteIp(), request.getStartTimestamp());
+
 
         try {
             LOGGER.info ( request.getId() + " - Report the request in the CSV record " );
@@ -124,7 +125,7 @@ public class PricingGuideServiceImpl implements PricingGuideService {
             return;
         }
 
-        LOGGER.info ( request.getId() + " - Pricing guide successfully sent to  " + contact.getEmail() );
+        LOGGER.info ( request.getId() + " - Pricing guide successfully sent to " + contact.getEmail() );
 
         monitoringService.stop("pricing_guide_build_request", request.getId(), request.getRemoteIp(), contact);
 
