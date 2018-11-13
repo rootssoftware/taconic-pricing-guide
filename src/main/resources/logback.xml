@@ -11,6 +11,8 @@
         <File>/opt/pricingguide/log/console.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>/opt/pricingguide/log/console.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
         </rollingPolicy>
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>%date{ISO8601} [%thread] [%level] in %logger - %msg %n</Pattern>

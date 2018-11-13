@@ -31,7 +31,6 @@ import be.roots.taconic.pricingguide.domain.Line;
 import be.roots.taconic.pricingguide.domain.Model;
 import be.roots.taconic.pricingguide.domain.Pricing;
 import be.roots.taconic.pricingguide.service.DefaultService;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

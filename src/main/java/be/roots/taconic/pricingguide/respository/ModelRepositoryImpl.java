@@ -31,8 +31,7 @@ import be.roots.taconic.pricingguide.util.JsonUtil;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -46,24 +45,27 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class ModelRepositoryImpl implements ModelRepository {
 
-    private final static Logger LOGGER = Logger.getLogger(ModelRepositoryImpl.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ModelRepositoryImpl.class);
 
-    @Autowired
-    private DefaultService defaultService;
+    private final DefaultService defaultService;
 
     private final LoadingCache<String, Model> modelLoadingCache = CacheBuilder.newBuilder()
             .maximumSize(10)
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build(
-                    new CacheLoader<String, Model>() {
+                    new CacheLoader<>() {
                         public Model load(String key) throws IOException {
                             final String jsonAsString = HttpUtil.readString(defaultService.getModelUrl() + "/" + key + ".json", defaultService.getUserName(), defaultService.getPassword());
-                            if ( jsonAsString != null ) {
+                            if (jsonAsString != null) {
                                 return JsonUtil.asObject(jsonAsString, Model.class);
                             }
                             return null;
                         }
                     });
+
+    public ModelRepositoryImpl(DefaultService defaultService) {
+        this.defaultService = defaultService;
+    }
 
     @Override
     public Model findOne(String key) {

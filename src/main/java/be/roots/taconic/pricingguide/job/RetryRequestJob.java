@@ -28,8 +28,7 @@ import be.roots.taconic.pricingguide.domain.Request;
 import be.roots.taconic.pricingguide.service.PricingGuideService;
 import be.roots.taconic.pricingguide.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -43,13 +42,16 @@ import java.util.List;
 @Component
 public class RetryRequestJob {
 
-    private final static Logger LOGGER = Logger.getLogger(RetryRequestJob.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(RetryRequestJob.class);
 
-    @Autowired
-    private PricingGuideService pricingGuideService;
+    private final PricingGuideService pricingGuideService;
 
     @Value("${request.retry.location}")
     private String requestRetryLocation;
+
+    public RetryRequestJob(PricingGuideService pricingGuideService) {
+        this.pricingGuideService = pricingGuideService;
+    }
 
     @Scheduled(fixedDelay = 30000)
     public void retryPricingGuideRequestForUnfoundContact() throws MessagingException {

@@ -29,13 +29,15 @@ import be.roots.taconic.pricingguide.util.DefaultUtil;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-import org.apache.tomcat.jni.Local;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -44,7 +46,7 @@ import java.util.List;
 @Service
 public class ReportServiceImpl implements ReportService {
 
-    private final static Logger LOGGER = Logger.getLogger(ReportServiceImpl.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ReportServiceImpl.class);
 
     @Value("${report.location}")
     private String reportLocation;

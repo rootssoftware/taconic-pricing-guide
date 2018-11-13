@@ -27,8 +27,7 @@ package be.roots.taconic.pricingguide.controller;
 import be.roots.taconic.pricingguide.domain.Request;
 import be.roots.taconic.pricingguide.service.MonitoringService;
 import be.roots.taconic.pricingguide.service.PricingGuideService;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Controller;
@@ -45,16 +44,19 @@ import java.util.UUID;
 @EnableAsync
 public class PricingGuideController {
 
-    private final static Logger LOGGER = Logger.getLogger(PricingGuideController.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PricingGuideController.class);
 
     @Value("${redirect.url}")
     private String redirect;
 
-    @Autowired
-    private PricingGuideService pricingGuideService;
+    private final PricingGuideService pricingGuideService;
 
-    @Autowired
-    private MonitoringService monitoringService;
+    private final MonitoringService monitoringService;
+
+    public PricingGuideController(PricingGuideService pricingGuideService, MonitoringService monitoringService) {
+        this.pricingGuideService = pricingGuideService;
+        this.monitoringService = monitoringService;
+    }
 
     @RequestMapping(value = "/pricing-guide-build-request", method = RequestMethod.POST)
     public String pricingGuideBuildRequest(@RequestParam("hsID") String hsID, @RequestParam("modelList") List<String> modelList ) throws IOException {

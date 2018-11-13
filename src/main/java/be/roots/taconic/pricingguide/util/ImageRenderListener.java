@@ -28,13 +28,14 @@ import com.itextpdf.text.pdf.parser.ImageRenderInfo;
 import com.itextpdf.text.pdf.parser.PdfImageObject;
 import com.itextpdf.text.pdf.parser.RenderListener;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
+import org.slf4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 class ImageRenderListener implements RenderListener {
 
-    private final static org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(ImageRenderListener.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImageRenderListener.class);
 
     private final ByteArrayOutputStream bos;
 

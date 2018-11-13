@@ -32,9 +32,10 @@ import be.roots.taconic.pricingguide.domain.Model;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import com.itextpdf.text.DocumentException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -44,7 +45,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.assertNotNull;
@@ -53,9 +54,10 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
+@Ignore
 public class PDFServiceTest {
 
-    private final static Logger LOGGER = Logger.getLogger(PDFServiceTest.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PDFServiceTest.class);
 
     private final static boolean MANUAL_MODE = true;
 
@@ -70,7 +72,7 @@ public class PDFServiceTest {
 
         final Model model = modelRepository.findOne("WH");
 
-        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), Arrays.asList(model)), 13);
+        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), Collections.singletonList(model)), 13);
 
     }
 

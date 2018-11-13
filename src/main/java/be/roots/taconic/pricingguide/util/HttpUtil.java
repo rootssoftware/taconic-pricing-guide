@@ -26,7 +26,7 @@ package be.roots.taconic.pricingguide.util;
 
 import com.itextpdf.xmp.impl.Base64;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -37,7 +37,7 @@ import java.net.URL;
 
 public class HttpUtil {
 
-    private static final Logger LOGGER = Logger.getLogger(HttpUtil.class);
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(HttpUtil.class);
     private static final String REQUEST_METHOD = "GET";
     private static final int CONNECT_TIMEOUT = 10000;
 

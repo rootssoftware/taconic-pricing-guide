@@ -28,7 +28,7 @@ import be.roots.taconic.pricingguide.domain.Toc;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.springframework.util.CollectionUtils;
 
 import java.io.ByteArrayOutputStream;
@@ -40,7 +40,7 @@ import java.util.List;
 
 public class iTextUtil {
 
-    private final static Logger LOGGER = Logger.getLogger(iTextUtil.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(iTextUtil.class);
 
     private static final int PAGE_MARGIN_TOP = 72;
     public static final Rectangle PAGE_SIZE = PageSize.LETTER;

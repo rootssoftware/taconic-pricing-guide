@@ -25,7 +25,6 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.mona.client.DefaultMetrics;
-import be.roots.mona.client.MonitoringClient;
 import be.roots.mona.client.TaconicMonitoringClient;
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Model;
@@ -127,8 +126,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     private Map<String, String> metaData(Contact contact) {
-        final Map<String, String> metaData = new HashMap<>();
-        metaData.putAll ( defaultMetaData );
+        final Map<String, String> metaData = new HashMap<>(defaultMetaData);
         metaData.put ( "country", contact.getCountry() );
         metaData.put ( "job_role", contact.getJobRole().getDescription() );
         metaData.put ( "therapeutic_area", contact.getTherapeuticArea() );

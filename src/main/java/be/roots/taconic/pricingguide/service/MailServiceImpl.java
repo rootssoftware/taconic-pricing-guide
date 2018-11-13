@@ -26,7 +26,6 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.util.DefaultUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -69,8 +68,11 @@ public class MailServiceImpl implements MailService {
     @Value("${document.file.name}")
     private String documentFileName;
 
-    @Autowired
-    private JavaMailSender javaMailSender;
+    private final JavaMailSender javaMailSender;
+
+    public MailServiceImpl(JavaMailSender javaMailSender) {
+        this.javaMailSender = javaMailSender;
+    }
 
     @Override
     public void sendMail(Contact contact, byte[] pricingGuide) throws MessagingException {

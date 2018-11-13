@@ -32,8 +32,7 @@ import com.itextpdf.text.html.simpleparser.HTMLWorker;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.DottedLineSeparator;
 import com.itextpdf.text.pdf.draw.LineSeparator;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -50,13 +49,13 @@ import java.util.List;
 @Service
 public class PDFServiceImpl implements PDFService {
 
-    private final static Logger LOGGER = Logger.getLogger(PDFServiceImpl.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PDFServiceImpl.class);
     private final static String DELIMITER = "-!-!-!-!-!-!-!-";
 
     private static final float COLUMN_RELATIVE_WIDTH_LEFT = 40f;
     private static final float COLUMN_RELATIVE_WIDTH_MIDDLE = 1f;
     private static final float COLUMN_RELATIVE_WIDTH_RIGHT = 59f;
-    private static final float LEFT_MARGIN_COVER_TITLE = 85f;
+    private static final float LEFT_MARGIN_COVER_TITLE = 325f;
 
     @Value("${link.email}")
     private String emailLink;
@@ -79,24 +78,27 @@ public class PDFServiceImpl implements PDFService {
     @Value("${disclaimer}")
     private String disclaimer;
 
-    @Autowired
-    private DefaultService defaultService;
+    private final DefaultService defaultService;
 
-    @Autowired
-    private TemplateRepository templateRepository;
+    private final TemplateRepository templateRepository;
 
-    @Autowired
-    private GitService gitService;
+    private final GitService gitService;
 
     private PDFTemplates pdfTemplate;
+
+    public PDFServiceImpl(DefaultService defaultService, TemplateRepository templateRepository, GitService gitService) {
+        this.defaultService = defaultService;
+        this.templateRepository = templateRepository;
+        this.gitService = gitService;
+    }
 
     @PostConstruct
     private void init() throws IOException {
 
         final String urlAsString = defaultService.getBaseUrl() + "/pricing_guide_files/pdf_list.json";
         final String pdfTemplateAsJson = HttpUtil.readString(urlAsString, defaultService.getUserName(), defaultService.getPassword());
-        if ( pdfTemplateAsJson == null ) {
-            LOGGER.error ( "Unable to open " + urlAsString );
+        if (pdfTemplateAsJson == null) {
+            LOGGER.error("Unable to open " + urlAsString);
             throw new RuntimeException("Unable to open " + urlAsString);
         }
         pdfTemplate = JsonUtil.asObject(pdfTemplateAsJson, PDFTemplates.class);
@@ -160,19 +162,19 @@ public class PDFServiceImpl implements PDFService {
         try (final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             final PdfReader reader = new PdfReader(guide);
-            final PdfStamper stamper = new PdfStamper(reader, baos );
+            final PdfStamper stamper = new PdfStamper(reader, baos);
 
             final Map<String, String> info = reader.getInfo();
 
-            info.put ("Title", documentTitle );
-            info.put ("Subject", documentTitle );
+            info.put("Title", documentTitle);
+            info.put("Subject", documentTitle);
 
             info.put(
-                        "Keywords",
-                        "Created for " + contact.getFullName() + ". " +
-                        "Currency used : " + contact.getCurrency() + ". " +
-                        "Mailed to " + contact.getEmail() + ". " +
-                        "Build on " + gitService.getCommitId()
+                    "Keywords",
+                    "Created for " + contact.getFullName() + ". " +
+                            "Currency used : " + contact.getCurrency() + ". " +
+                            "Mailed to " + contact.getEmail() + ". " +
+                            "Build on " + gitService.getCommitId()
             );
 
             info.put("Creator", "Roots Software - http://www.roots.be - info@roots.be");
@@ -204,7 +206,7 @@ public class PDFServiceImpl implements PDFService {
                 .filter(Objects::nonNull)
                 .map(model -> createModelPage(contact, model))
                 .forEach(modelPageTables::add)
-                ;
+        ;
 
         // put the PdfPTable Models tables on PDF pages (multiple per page if possible)
         byte[] pages = new byte[]{};
@@ -213,10 +215,10 @@ public class PDFServiceImpl implements PDFService {
         List<String> pageNames = new ArrayList<>();
 
         int i = 0;
-        for ( PdfPTable modelPageTable : modelPageTables ) {
+        for (PdfPTable modelPageTable : modelPageTables) {
 
             // create a new pdf page, if necessary
-            if ( height != 0 && ( height + modelPageTable.getTotalHeight() + 20 /* for the line separator */ ) >= iTextUtil.PAGE_HEIGHT ) {
+            if (height != 0 && (height + modelPageTable.getTotalHeight() + 20 /* for the line separator */) >= iTextUtil.PAGE_HEIGHT) {
 
                 writer.close();
                 document.close();
@@ -234,17 +236,17 @@ public class PDFServiceImpl implements PDFService {
 
                 document.open();
 
-            } else if ( height != 0 ) {
+            } else if (height != 0) {
                 // if not the first model on the page, draw a separator
 
-                document.add (new Paragraph(new Chunk(new LineSeparator(.25f, 80f, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER, -2 )) ));
-                document.add (new Paragraph(new Chunk("   ") ));
+                document.add(new Paragraph(new Chunk(new LineSeparator(.25f, 80f, BaseColor.LIGHT_GRAY, Element.ALIGN_CENTER, -2))));
+                document.add(new Paragraph(new Chunk("   ")));
             }
 
             // rerender the table (with a valid pdfWriter)
             document.add(createModelPage(contact, models.get(modelPageTables.indexOf(modelPageTable))));
             height += modelPageTable.getTotalHeight();
-            pageNames.add ( models.get ( modelPageTables.indexOf(modelPageTable) ).getProductNameProcessed() );
+            pageNames.add(models.get(modelPageTables.indexOf(modelPageTable)).getProductNameProcessed());
 
         }
         writer.close();
@@ -262,7 +264,7 @@ public class PDFServiceImpl implements PDFService {
         final int numberOfPages = tableOfContents.getNumberOfPages();
         tableOfContents.addTocEntry(numberOfPages);
         byte[] pages = new byte[]{};
-        for (int i = 0; i < numberOfPages; i ++ ) {
+        for (int i = 0; i < numberOfPages; i++) {
             pages = iTextUtil.merge(pages, iTextUtil.emptyPage());
         }
         return pages;
@@ -270,10 +272,10 @@ public class PDFServiceImpl implements PDFService {
 
     private byte[] fixBackground(byte[] pdf, Toc tableOfContents, int numberOfModelAndTOCPages) throws IOException, DocumentException {
 
-        try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
-            final byte[] tocTemplate = templateRepository.findOne ( pdfTemplate.getTocTemplate().getUrl() );
-            final byte[] modelPageTemplate = templateRepository.findOne ( pdfTemplate.getModel().getUrl() );
+            final byte[] tocTemplate = templateRepository.findOne(pdfTemplate.getTocTemplate().getUrl());
+            final byte[] modelPageTemplate = templateRepository.findOne(pdfTemplate.getModel().getUrl());
 
             final Image tocBackgroundImage = iTextUtil.getImageFromPdf(tocTemplate);
             tocBackgroundImage.setAbsolutePosition(0, 0);
@@ -290,11 +292,11 @@ public class PDFServiceImpl implements PDFService {
             final PdfContentByte tocContent = stamper.getUnderContent(firstPageOfToc);
 
             final float pageWidth = reader.getPageSize(1).getWidth();
-            final float pageHeight = tocBackgroundImage.getHeight() / ( tocBackgroundImage.getHeight() / reader.getPageSize(1).getHeight()  );
+            final float pageHeight = tocBackgroundImage.getHeight() / (tocBackgroundImage.getHeight() / reader.getPageSize(1).getHeight());
 
             tocContent.addImage(tocBackgroundImage, pageWidth, 0, 0, pageHeight, 0, 0);
 
-            for (int pageNumber = firstPageOfToc + 1; pageNumber <= firstPageOfToc + numberOfModelAndTOCPages; pageNumber ++ ) {
+            for (int pageNumber = firstPageOfToc + 1; pageNumber <= firstPageOfToc + numberOfModelAndTOCPages; pageNumber++) {
 
                 final PdfContentByte content = stamper.getUnderContent(pageNumber);
                 content.addImage(modelPageBackgroundImage, pageWidth, 0, 0, pageHeight, 0, 0);
@@ -313,11 +315,11 @@ public class PDFServiceImpl implements PDFService {
     private byte[] collectPages(List<Template> pages, Toc tableOfContents, String sortPrefix) throws IOException, DocumentException {
         byte[] pdf = new byte[]{};
         int i = 1;
-        for ( Template pdfTemplate : pages ) {
-            if ( ! pdfTemplate.isTocTemplate() ) {
+        for (Template pdfTemplate : pages) {
+            if (!pdfTemplate.isTocTemplate()) {
                 final byte[] template = templateRepository.findOne(pdfTemplate.getUrl());
                 pdf = iTextUtil.merge(pdf, template);
-                tableOfContents.addEntries(1, Collections.singletonList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + IntUtil.format(i++) );
+                tableOfContents.addEntries(1, Collections.singletonList(pdfTemplate.getName()), template, pdfTemplate.isToc(), sortPrefix + "___" + IntUtil.format(i++));
             }
         }
         return pdf;
@@ -325,7 +327,7 @@ public class PDFServiceImpl implements PDFService {
 
     private PdfPTable createModelPage(Contact contact, Model model) {
 
-        final PdfPTable pdfPTable = new PdfPTable( new float[] {COLUMN_RELATIVE_WIDTH_LEFT, COLUMN_RELATIVE_WIDTH_MIDDLE, COLUMN_RELATIVE_WIDTH_RIGHT} );
+        final PdfPTable pdfPTable = new PdfPTable(new float[]{COLUMN_RELATIVE_WIDTH_LEFT, COLUMN_RELATIVE_WIDTH_MIDDLE, COLUMN_RELATIVE_WIDTH_RIGHT});
         pdfPTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth());
         final PdfPTable modelPricingTables = buildModelPricingTables(contact, model);
         modelPricingTables.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
@@ -359,38 +361,38 @@ public class PDFServiceImpl implements PDFService {
 
         final Phrase phrase = new Phrase();
 
-        if ( ! StringUtils.isEmpty( name ) ) {
+        if (!StringUtils.isEmpty(name)) {
 
-            for ( String[] alphabet : GreekAlphabet.getAlphabet() ) {
+            for (String[] alphabet : GreekAlphabet.getAlphabet()) {
                 name = name.replaceAll(alphabet[0], DELIMITER + alphabet[0] + DELIMITER);
             }
-            name = name.replaceAll("<sup>|<SUP>", DELIMITER + "<sup>" );
+            name = name.replaceAll("<sup>|<SUP>", DELIMITER + "<sup>");
             name = name.replaceAll("</sup>|</SUP>", DELIMITER);
-            name = name.replaceAll("<i>|<I>|<em>|<EM>", DELIMITER + "<i>" );
-            name = name.replaceAll("</i>|</I>|</em>|</EM>", DELIMITER + "</i>" );
+            name = name.replaceAll("<i>|<I>|<em>|<EM>", DELIMITER + "<i>");
+            name = name.replaceAll("</i>|</I>|</em>|</EM>", DELIMITER + "</i>");
 
             final String[] tokens = name.split(DELIMITER);
-            for ( String token : tokens ) {
+            for (String token : tokens) {
 
                 String text = token;
-                if ( text.startsWith("<i>") ) {
+                if (text.startsWith("<i>")) {
                     usedFont = italicFont;
                     text = text.substring(3);
-                } else if ( text.startsWith("</i>") ) {
+                } else if (text.startsWith("</i>")) {
                     usedFont = normalFont;
                     text = text.substring(4);
                 }
 
                 usedFont.setSize(baseFont.getSize());
 
-                if ( text.startsWith("&") ) {
+                if (text.startsWith("&")) {
                     final char replacement = GreekAlphabet.getReplacement(text);
                     if (!Character.isWhitespace(replacement)) {
                         phrase.add(SpecialSymbol.get(replacement, symbol));
                     } else {
                         phrase.add(new Chunk(text, usedFont));
                     }
-                } else if ( text.startsWith("<sup>") ) {
+                } else if (text.startsWith("<sup>")) {
 
                     final Font superScriptFont = new Font(usedFont);
                     superScriptFont.setSize(baseFont.getSize() - 1.5f);
@@ -400,7 +402,7 @@ public class PDFServiceImpl implements PDFService {
                     phrase.add(superScript);
 
                 } else {
-                    phrase.add ( new Chunk ( text, usedFont ) );
+                    phrase.add(new Chunk(text, usedFont));
                 }
 
             }
@@ -414,14 +416,14 @@ public class PDFServiceImpl implements PDFService {
         final PdfPTable table = new PdfPTable(1);
         table.setSplitLate(false); // this sees to it that if the first table spans over different pages, the first chunck of the pricingTable is shown on the first page
 
-        final List<Pricing> validPricings = model.validPricings ( contact );
+        final List<Pricing> validPricings = model.validPricings(contact);
 
-        if ( CollectionUtils.isEmpty( validPricings )) {
+        if (CollectionUtils.isEmpty(validPricings)) {
             final Chunk chunk = new Chunk("Contact us for pricing on this model", iTextUtil.getFontContactUs());
             chunk.setAction(new PdfAction(contactUsUrl));
             table.addCell(cell(new Phrase(chunk)));
         } else {
-            validPricings.forEach( pricing -> buildModelPricingTable(table, pricing) );
+            validPricings.forEach(pricing -> buildModelPricingTable(table, pricing));
         }
 
         return table;
@@ -438,47 +440,47 @@ public class PDFServiceImpl implements PDFService {
         // build the pricing table details
         final PdfPTable detailsTable = new PdfPTable(pricing.getNumberOfHeaderItems());
         detailsTable.setHeaderRows(1); // to re-print the header on each page if the table splits over multiple pages
-        if ( pricing.isQuantities() ) {
+        if (pricing.isQuantities()) {
             detailsTable.addCell(cellH(new Paragraph("Quantity", iTextUtil.getFontModelPricingTitle())));
         }
-        if ( pricing.isAge() ) {
+        if (pricing.isAge()) {
             detailsTable.addCell(cellH(new Paragraph("Age (weeks)", iTextUtil.getFontModelPricingTitle())));
         }
-        if ( pricing.isMale() ) {
+        if (pricing.isMale()) {
             detailsTable.addCell(cellH(new Paragraph("Male", iTextUtil.getFontModelPricingTitle())));
         }
-        if ( pricing.isFemale() ) {
+        if (pricing.isFemale()) {
             detailsTable.addCell(cellH(new Paragraph("Female", iTextUtil.getFontModelPricingTitle())));
         }
         boolean invert = false;
-        for ( Line line : pricing.getLines() ) {
-            if ( pricing.isQuantities() ) {
+        for (Line line : pricing.getLines()) {
+            if (pricing.isQuantities()) {
                 detailsTable.addCell(cellD(new Paragraph(line.getQuantity(), iTextUtil.getFontModelPricingData()), invert));
             }
-            if ( pricing.isAge() ) {
+            if (pricing.isAge()) {
                 detailsTable.addCell(cellD(new Paragraph(line.getAge(), iTextUtil.getFontModelPricingData()), invert));
             }
-            if ( pricing.isMale() ) {
+            if (pricing.isMale()) {
                 detailsTable.addCell(cellD(new Paragraph(line.getMale(), iTextUtil.getFontModelPricingData()), invert));
             }
-            if ( pricing.isFemale() ) {
+            if (pricing.isFemale()) {
                 detailsTable.addCell(cellD(new Paragraph(line.getFemale(), iTextUtil.getFontModelPricingData()), invert));
             }
             invert = !invert;
         }
 
-        if ( ! StringUtils.isEmpty(pricing.getMessage())) {
-            detailsTable.addCell(cell(new Paragraph (pricing.getMessage(), iTextUtil.getFontModelPricingMessage()), pricing.getNumberOfHeaderItems()));
+        if (!StringUtils.isEmpty(pricing.getMessage())) {
+            detailsTable.addCell(cell(new Paragraph(pricing.getMessage(), iTextUtil.getFontModelPricingMessage()), pricing.getNumberOfHeaderItems()));
         }
         detailsTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
 
         // combine both tables into one table
         final PdfPTable modelTable = new PdfPTable(1);
         modelTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
-        modelTable.addCell ( cell ( titleTable ) );
-        modelTable.addCell ( cell ( detailsTable ) );
+        modelTable.addCell(cell(titleTable));
+        modelTable.addCell(cell(detailsTable));
 
-        if ( modelTable.getTotalHeight() < iTextUtil.PAGE_HEIGHT ) {
+        if (modelTable.getTotalHeight() < iTextUtil.PAGE_HEIGHT) {
             // if the pricing table can fit on a page, then keep it together and if necessary break to the next page
             modelTable.keepRowsTogether(0);
         } else {
@@ -487,19 +489,19 @@ public class PDFServiceImpl implements PDFService {
         }
 
         final PdfPCell cell = cell(modelTable);
-        table.addCell (cell);
+        table.addCell(cell);
     }
 
     private PdfPTable buildModelDetailSection(Model model) {
 
         final Phrase p = processHtmlCodes(model.getProductNameProcessed(), iTextUtil.getFontModelTitle(), iTextUtil.getFontModelSymbol());
-        for ( Chunk c : p.getChunks() ) {
+        for (Chunk c : p.getChunks()) {
             c.setAction(new PdfAction(model.getUrl()));
         }
 
         final StringBuilder strAppList = new StringBuilder();
-        for ( String application : model.getApplicationsSorted() ) {
-            if ( strAppList.length() != 0 ) {
+        for (String application : model.getApplicationsSorted()) {
+            if (strAppList.length() != 0) {
                 strAppList.append(", ");
             }
             strAppList.append(application);
@@ -524,7 +526,7 @@ public class PDFServiceImpl implements PDFService {
 
     private PdfPTable createOrderButton(Model model) {
 
-        final Chunk chunk = new Chunk ( "Order on taconic.com", iTextUtil.getFontButton() );
+        final Chunk chunk = new Chunk("Order on taconic.com", iTextUtil.getFontButton());
         chunk.setAction(new PdfAction("http://www.taconic.com/start-an-order?modelNumber=" + model.getModelNumber()));
 
         final PdfPCell cell = cell(new Phrase(chunk));
@@ -548,17 +550,17 @@ public class PDFServiceImpl implements PDFService {
         paragraph.add(new Chunk(key, iTextUtil.getFontModelKey()));
         paragraph.add(new Chunk(": ", iTextUtil.getFontModelKey()));
 
-        if ( value == null ) {
+        if (value == null) {
             value = "";
         }
 
         final Phrase valuePhrase = processHtmlCodes(value.trim(), iTextUtil.getFontModelValue(), iTextUtil.getFontModelSymbol());
-        if ( ! StringUtils.isEmpty(url)) {
-            for ( Chunk chunk : valuePhrase.getChunks() ) {
+        if (!StringUtils.isEmpty(url)) {
+            for (Chunk chunk : valuePhrase.getChunks()) {
                 chunk.setAction(new PdfAction(url));
             }
         }
-        for ( Chunk chunk : valuePhrase.getChunks() ) {
+        for (Chunk chunk : valuePhrase.getChunks()) {
             chunk.setLineHeight(13f);
         }
         paragraph.add(valuePhrase);
@@ -568,31 +570,31 @@ public class PDFServiceImpl implements PDFService {
         return cell;
     }
 
-    private PdfPCell cell ( Phrase p, int colSpan ) {
+    private PdfPCell cell(Phrase p, int colSpan) {
         final PdfPCell cell = cell(p);
         cell.setColspan(colSpan);
         return cell;
     }
 
-    private PdfPCell cell ( Phrase p ) {
+    private PdfPCell cell(Phrase p) {
         final PdfPCell cell = new PdfPCell(p);
         cell.setBorder(0);
         return cell;
     }
 
-    private PdfPCell cellD ( Phrase p, boolean invert ) {
+    private PdfPCell cellD(Phrase p, boolean invert) {
         final PdfPCell cell = new PdfPCell(p);
         cell.setBorder(0);
         cell.setPadding(5f);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        if ( invert ) {
+        if (invert) {
             cell.setBackgroundColor(iTextUtil.getRowInvertColor());
         }
         return cell;
     }
 
-    private PdfPCell cellH ( Phrase p ) {
+    private PdfPCell cellH(Phrase p) {
         final PdfPCell cell = new PdfPCell(p);
         cell.setBackgroundColor(iTextUtil.getHeaderColor());
         cell.setPadding(5f);
@@ -602,7 +604,7 @@ public class PDFServiceImpl implements PDFService {
         return cell;
     }
 
-    private PdfPCell cell ( PdfPTable p ) {
+    private PdfPCell cell(PdfPTable p) {
         final PdfPCell cell = new PdfPCell(p);
         cell.setBorder(0);
         return cell;
@@ -610,7 +612,7 @@ public class PDFServiceImpl implements PDFService {
 
     private byte[] personalize(byte[] pdf, Contact contact, Toc tableOfContents) throws IOException, DocumentException {
 
-        try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
             final PdfReader reader = new PdfReader(pdf);
             final PdfStamper stamper = new PdfStamper(reader, bos);
@@ -645,8 +647,8 @@ public class PDFServiceImpl implements PDFService {
             // stamp some text on first page of the table of contents page
             final Image logoImage = iTextUtil.getImageFromByteArray(HttpUtil.readByteArray(pdfTemplate.getLogo().getUrl(), defaultService.getUserName(), defaultService.getPassword()));
             final PdfContentByte tocContent = stamper.getOverContent(tableOfContents.getFirstPageOfToc());
-            final float resizeRatio = logoImage.getHeight()/85; // define the desired height of the log
-            tocContent.addImage(logoImage, logoImage.getWidth()/resizeRatio, 0, 0, logoImage.getHeight()/resizeRatio, 59, 615);
+            final float resizeRatio = logoImage.getHeight() / 85; // define the desired height of the log
+            tocContent.addImage(logoImage, logoImage.getWidth() / resizeRatio, 0, 0, logoImage.getHeight() / resizeRatio, 59, 615);
 
             text = stamper.getOverContent(tableOfContents.getFirstPageOfToc());
 
@@ -672,8 +674,8 @@ public class PDFServiceImpl implements PDFService {
             final List<Element> elements = HTMLWorker.parseToList(new StringReader(disclaimer), null);
             final Paragraph p = new Paragraph();
             p.setAlignment(Element.ALIGN_JUSTIFIED);
-            for ( Element element : elements ) {
-                for ( Chunk chunk : element.getChunks() ) {
+            for (Element element : elements) {
+                for (Chunk chunk : element.getChunks()) {
                     chunk.setFont(iTextUtil.getFontDisclaimer());
                 }
                 p.add(element);
@@ -697,9 +699,9 @@ public class PDFServiceImpl implements PDFService {
         final List<HashMap<String, Object>> modelBookmarkKids = new ArrayList<>();
         HashMap<String, Object> modelBookmark;
 
-        for ( TocEntry tocEntry : entriesSorted) {
+        for (TocEntry tocEntry : entriesSorted) {
 
-            if ( tocEntry.isIncludedInToc() ) {
+            if (tocEntry.isIncludedInToc()) {
 
                 final HashMap<String, Object> bookmark = new HashMap<>();
 
@@ -713,13 +715,13 @@ public class PDFServiceImpl implements PDFService {
                 bookmark.put("Title", name);
                 bookmark.put("Action", "GoTo");
                 bookmark.put("Page", String.format("%d Fit", tocEntry.getFinalPageNumber()));
-                if ( tocEntry.getLevel() == 1 ) {
+                if (tocEntry.getLevel() == 1) {
                     outlines.add(bookmark);
                 } else {
                     modelBookmarkKids.add(bookmark);
                 }
 
-                if ( tocEntry.isModelHeader() ) {
+                if (tocEntry.isModelHeader()) {
                     modelBookmark = bookmark;
                     modelBookmark.put("Open", true);
                     modelBookmark.put("Kids", modelBookmarkKids);
@@ -729,7 +731,7 @@ public class PDFServiceImpl implements PDFService {
 
         }
 
-        try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             final PdfReader reader = new PdfReader(pdf);
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
@@ -744,14 +746,14 @@ public class PDFServiceImpl implements PDFService {
 
     private byte[] stampTableOfContents(byte[] pdf, Toc tableOfContents) throws IOException, DocumentException {
 
-        try ( final ByteArrayOutputStream bos = new ByteArrayOutputStream() ) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
             final PdfReader reader = new PdfReader(pdf);
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
             // stamp the named destinations
-            for ( int pageNumber = 1; pageNumber <= reader.getNumberOfPages(); pageNumber++ ) {
-                stamper.addNamedDestination("page"+pageNumber, pageNumber, new PdfDestination(PdfDestination.XYZ, 80f, 800f, 0));
+            for (int pageNumber = 1; pageNumber <= reader.getNumberOfPages(); pageNumber++) {
+                stamper.addNamedDestination("page" + pageNumber, pageNumber, new PdfDestination(PdfDestination.XYZ, 80f, 800f, 0));
             }
 
             // create the table of contents
@@ -773,19 +775,19 @@ public class PDFServiceImpl implements PDFService {
                     // take the right TOC page to stamp the TOC entry on (needed for TOC's with multiple pages)
                     if (tocEntryNumber == getNumberOfItemsPerTocPage(0) + 1 ||
                             (tocEntryNumber > getNumberOfItemsPerTocPage(0) &&
-                             (tocEntryNumber - getNumberOfItemsPerTocPage(0)) % ( getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1) == 0)) {
+                                    (tocEntryNumber - getNumberOfItemsPerTocPage(0)) % (getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1) == 0)) {
                         currentTocPage++;
                         canvas = stamper.getOverContent(currentTocPage);
                     }
 
                     Font font = iTextUtil.getFontToc();
-                    if ( tocEntry.getLevel() == 1 ) {
+                    if (tocEntry.getLevel() == 1) {
                         font = iTextUtil.getFontTocBold();
                     }
 
                     final Phrase p = processHtmlCodes(tocEntry.getLevelString() + tocEntry.getName(), font, iTextUtil.getFontTocSymbol());
                     p.add(new Chunk("", iTextUtil.getFontToc()));
-                    if ( tocEntry.isShowingPageNumber() ) {
+                    if (tocEntry.isShowingPageNumber()) {
                         p.add(new Chunk(new DottedLineSeparator()));
                         p.add(new Chunk("  " + String.valueOf(tocEntry.getFinalPageNumber()), iTextUtil.getFontToc()));
                     }
@@ -798,13 +800,13 @@ public class PDFServiceImpl implements PDFService {
                     if (tocEntryNumber <= getNumberOfItemsPerTocPage(0)) {
                         y = 460 - (16 * tocEntryNumber);
                     } else {
-                        y = 680 - (16 * ((tocEntryNumber - getNumberOfItemsPerTocPage(0)) % ( getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1 )));
+                        y = 680 - (16 * ((tocEntryNumber - getNumberOfItemsPerTocPage(0)) % (getNumberOfItemsPerTocPage(currentTocPage - firstTocPage) + 1)));
                     }
 
                     final ColumnText ct = new ColumnText(canvas);
                     ct.setSimpleColumn(p, 52, y, 555, 70, 0, Element.ALIGN_JUSTIFIED);
                     ct.go();
-                    
+
                 }
             }
 
@@ -825,21 +827,21 @@ public class PDFServiceImpl implements PDFService {
             final PdfStamper stamper = new PdfStamper(reader, bos);
 
             final int firstPageOfToc = tableOfContents.getFirstPageOfToc();
-            for (int i = firstPageOfToc; i <= firstPageOfToc + numberOfModelAndTOCPages; i++ ) {
+            for (int i = firstPageOfToc; i <= firstPageOfToc + numberOfModelAndTOCPages; i++) {
 
-                final Chunk websiteChunk = new Chunk(".....................");
+                final Chunk websiteChunk = new Chunk("[.....................]");
                 websiteChunk.setAction(new PdfAction(websiteLink));
 
                 ColumnText ct = new ColumnText(stamper.getUnderContent(i));
-                ct.setSimpleColumn(335, 25, 140, 50);
+                ct.setSimpleColumn(180, 25, 335, 64);
                 ct.addText(new Phrase(websiteChunk));
                 ct.go();
 
-                final Chunk emailChunk = new Chunk("..............................");
+                final Chunk emailChunk = new Chunk("[..............................]");
                 emailChunk.setAction(new PdfAction(emailLink));
 
                 ct = new ColumnText(stamper.getUnderContent(i));
-                ct.setSimpleColumn(295, 12, 450, 37);
+                ct.setSimpleColumn(335, 12, 460, 53);
                 ct.addText(new Phrase(emailChunk));
                 ct.go();
 

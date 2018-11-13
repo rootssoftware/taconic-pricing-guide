@@ -29,8 +29,7 @@ import be.roots.taconic.pricingguide.util.HttpUtil;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -40,20 +39,23 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TemplateRepositoryImpl implements TemplateRepository {
 
-    private final static Logger LOGGER = Logger.getLogger(TemplateRepositoryImpl.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TemplateRepositoryImpl.class);
 
-    @Autowired
-    private DefaultService defaultService;
+    private final DefaultService defaultService;
 
     private final LoadingCache<String, byte[]> templateLoadingCache = CacheBuilder.newBuilder()
             .maximumSize(20)
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build(
-                    new CacheLoader<String, byte[]>() {
+                    new CacheLoader<>() {
                         public byte[] load(String key) throws IOException {
-                            return HttpUtil.readByteArray ( key, defaultService.getUserName(), defaultService.getPassword() );
+                            return HttpUtil.readByteArray(key, defaultService.getUserName(), defaultService.getPassword());
                         }
                     });
+
+    public TemplateRepositoryImpl(DefaultService defaultService) {
+        this.defaultService = defaultService;
+    }
 
     @Override
     public byte[] findOne(String templateUrl) {

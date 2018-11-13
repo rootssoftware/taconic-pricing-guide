@@ -30,9 +30,9 @@ import be.roots.taconic.pricingguide.hubspot.FormSubmission;
 import be.roots.taconic.pricingguide.hubspot.RecentContact;
 import be.roots.taconic.pricingguide.hubspot.RecentContacts;
 import be.roots.taconic.pricingguide.util.HttpUtil;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -43,7 +43,7 @@ import java.io.IOException;
 @Service
 public class HubSpotServiceImpl implements HubSpotService {
     
-    private final static Logger LOGGER = Logger.getLogger(HubSpotService.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(HubSpotService.class);
 
     @Value("${api.key}")
     private String apiKey;

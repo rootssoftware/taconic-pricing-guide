@@ -26,7 +26,6 @@ package be.roots.taconic.pricingguide.job;
 
 import be.roots.taconic.pricingguide.service.MailService;
 import be.roots.taconic.pricingguide.service.ReportService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -35,11 +34,14 @@ import javax.mail.MessagingException;
 @Component
 public class SendReportJob {
 
-    @Autowired
-    private MailService mailService;
+    private final MailService mailService;
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
+
+    public SendReportJob(MailService mailService, ReportService reportService) {
+        this.mailService = mailService;
+        this.reportService = reportService;
+    }
 
     @Scheduled(cron = "0 0 3 * * *")
     public void sendCsvReportOfYesterday() throws MessagingException {

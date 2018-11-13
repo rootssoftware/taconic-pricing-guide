@@ -41,7 +41,7 @@ public class ModelTest {
 
         Model m = new Model();
 
-        m.setPricing(new ArrayList<Pricing>());
+        m.setPricing(new ArrayList<>());
         m.getPricing().add ( buildPricing ( true, Currency.EUR, "A" ) );
         m.getPricing().add(buildPricing(false, Currency.EUR, "A" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT));
 
@@ -64,7 +64,7 @@ public class ModelTest {
 
         Model m = new Model();
 
-        m.setPricing(new ArrayList<Pricing>());
+        m.setPricing(new ArrayList<>());
         m.getPricing().add ( buildPricing ( true, Currency.EUR, "A" ) );
 
         List<Pricing> pricings = m.validPricings(nonProfitContact());
@@ -86,7 +86,7 @@ public class ModelTest {
 
         Model m = new Model();
 
-        m.setPricing(new ArrayList<Pricing>());
+        m.setPricing(new ArrayList<>());
         m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
         m.getPricing().add(buildPricing(true, Currency.EUR, "B"));
         m.getPricing().add ( buildPricing ( false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT ) );
@@ -115,7 +115,7 @@ public class ModelTest {
 
         Model m = new Model();
 
-        m.setPricing(new ArrayList<Pricing>());
+        m.setPricing(new ArrayList<>());
         m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
         m.getPricing().add(buildPricing(true, Currency.EUR, "B"));
         m.getPricing().add ( buildPricing ( false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT ) );
@@ -147,7 +147,7 @@ public class ModelTest {
 
         Model m = new Model();
 
-        m.setPricing(new ArrayList<Pricing>());
+        m.setPricing(new ArrayList<>());
 
         List<Pricing> pricings = m.validPricings(nonProfitContact());
 

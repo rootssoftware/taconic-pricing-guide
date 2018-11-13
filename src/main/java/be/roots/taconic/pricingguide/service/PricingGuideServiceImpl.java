@@ -31,8 +31,7 @@ import be.roots.taconic.pricingguide.respository.ModelRepository;
 import be.roots.taconic.pricingguide.util.JsonUtil;
 import com.itextpdf.text.DocumentException;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -47,31 +46,34 @@ import java.util.UUID;
 @Service
 public class PricingGuideServiceImpl implements PricingGuideService {
 
-    private final static Logger LOGGER = Logger.getLogger(PricingGuideServiceImpl.class);
+    private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PricingGuideServiceImpl.class);
 
-    @Autowired
-    private HubSpotService hubSpotService;
+    private final HubSpotService hubSpotService;
 
-    @Autowired
-    private ModelRepository modelRepository;
+    private final ModelRepository modelRepository;
 
-    @Autowired
-    private PDFService pdfService;
+    private final PDFService pdfService;
 
-    @Autowired
-    private MailService mailService;
+    private final MailService mailService;
 
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
 
-    @Autowired
-    private MonitoringService monitoringService;
+    private final MonitoringService monitoringService;
 
     @Value("${request.retry.location}")
     private String requestRetryLocation;
 
     @Value("${request.error.location}")
     private String requestErrorLocation;
+
+    public PricingGuideServiceImpl(HubSpotService hubSpotService, ModelRepository modelRepository, PDFService pdfService, MailService mailService, ReportService reportService, MonitoringService monitoringService) {
+        this.hubSpotService = hubSpotService;
+        this.modelRepository = modelRepository;
+        this.pdfService = pdfService;
+        this.mailService = mailService;
+        this.reportService = reportService;
+        this.monitoringService = monitoringService;
+    }
 
     @Async
     @Override
