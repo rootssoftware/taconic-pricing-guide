@@ -25,17 +25,14 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
+import be.roots.taconic.pricingguide.domain.Model;
 import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 
-public interface MonitoringService {
+import java.util.List;
 
-    boolean shouldBeMonitored(String remoteIp);
+public interface ModelService {
 
-    void start(String name, String id, String remoteIp, long startTimestamp);
-    void stop(String name, String id, String remoteIp, Contact contact);
-
-    void sendAlive();
-
-    void incrementCounter(PDFModel model, Contact contact);
+    List<PDFModel> convert (List<Model> models, Contact contact);
+    PDFModel convert (Model model, Contact contact);
 
 }

@@ -24,26 +24,27 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.springframework.util.CollectionUtils;
 
-import javax.validation.constraints.NotNull;
-import java.util.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class Model implements Comparable<Model> {
+import java.util.List;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Model{
 
     private String url;
     private String modelNumber;
     private String productName;
     private String healthReport;
     private String nomenclature;
+    private String license;
     private String species;
     private String animalType;
     private List<String> applications;
     private List<Pricing> pricing;
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getUrl() {
         return url;
     }
@@ -52,7 +53,7 @@ public class Model implements Comparable<Model> {
         this.url = url;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getModelNumber() {
         return modelNumber;
     }
@@ -61,7 +62,7 @@ public class Model implements Comparable<Model> {
         this.modelNumber = modelNumber;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getProductName() {
         return productName;
     }
@@ -70,7 +71,7 @@ public class Model implements Comparable<Model> {
         this.productName = productName;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getHealthReport() {
         return healthReport;
     }
@@ -79,8 +80,8 @@ public class Model implements Comparable<Model> {
         this.healthReport = healthReport;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-    private String getNomenclature() {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String getNomenclature() {
         return nomenclature;
     }
 
@@ -88,7 +89,16 @@ public class Model implements Comparable<Model> {
         this.nomenclature = nomenclature;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String getLicense() {
+        return license == null ? license : license.replaceAll("\\n", "");
+    }
+
+    public void setLicense(String license) {
+        this.license = license;
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<String> getApplications() {
         return applications;
     }
@@ -97,7 +107,7 @@ public class Model implements Comparable<Model> {
         this.applications = applications;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getSpecies() {
         return species;
     }
@@ -106,7 +116,7 @@ public class Model implements Comparable<Model> {
         this.species = species;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<Pricing> getPricing() {
         return pricing;
     }
@@ -115,88 +125,13 @@ public class Model implements Comparable<Model> {
         this.pricing = pricing;
     }
 
-    @JsonIgnore
-    public List<Pricing> validPricings(Contact contact) {
-        final List<Pricing> validPricing = new ArrayList<>();
-
-        if (!CollectionUtils.isEmpty(pricing)) {
-
-            final Set<String> categoryCodes = new LinkedHashSet<>();
-            final Map<String, Pricing> nonProfitPricing = new HashMap<>();
-            final Map<String, Pricing> profitPricing = new HashMap<>();
-
-            // loop trough all pricings and note all the available
-            pricing
-                    .stream()
-                    .filter(p -> p.getCurrency().getIsoCode().equals(contact.getCurrency().getIsoCode()))
-                    .forEachOrdered(p -> {
-                        categoryCodes.add(p.getCategoryCode());
-                        if (p.isProfit()) {
-                            profitPricing.put(p.getCategoryCode(), p);
-                        } else {
-                            nonProfitPricing.put(p.getCategoryCode(), p);
-                        }
-                    });
-
-            // for each code; look for the correct pricing
-            for ( String categoryCode : categoryCodes ) {
-
-                if ( contact.getCurrency().isNonProfit() ) {
-                    if ( nonProfitPricing.containsKey(categoryCode )) {
-                        validPricing.add ( nonProfitPricing.get(categoryCode) );
-                    } else {
-                        validPricing.add ( profitPricing.get(categoryCode) );
-                    }
-
-                } else {
-                    validPricing.add ( profitPricing.get(categoryCode) );
-                }
-
-            }
-
-        }
-        return validPricing;
-    }
-
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getAnimalType() {
         return animalType;
     }
 
     public void setAnimalType(String animalType) {
         this.animalType = animalType;
-    }
-
-    @JsonIgnore
-    public String getProductNameProcessed() {
-        String pName = getProductName();
-        pName = pName.replaceAll("<span.*?>", "");
-        pName = pName.replaceAll("</span>", "");
-        pName = pName.replaceAll("&reg;", "\u00AE");
-        pName = pName.replaceAll("&trade;", "\u2122");
-        pName = pName.trim();
-        return pName;
-    }
-
-    @JsonIgnore
-    private String getProductNameToSortOn() {
-        // ensure that greek characters are sorted behind the letter 'Z'
-        return getProductNameProcessed().replace("&", "{");
-    }
-
-    @JsonIgnore
-    public String getNomenclatureParsed() {
-        String strNomen = getNomenclature();
-        strNomen = strNomen.replaceAll("<span.*?>", "");
-        strNomen = strNomen.replaceAll("</span>", "");
-        strNomen = strNomen.replaceAll("<div.*?>", "");
-        strNomen = strNomen.replaceAll("</div>", "");
-        strNomen = strNomen.replaceAll("<font.*?>", "");
-        strNomen = strNomen.replaceAll("</font>", "");
-        strNomen = strNomen.replaceAll("<p.*?>", "");
-        strNomen = strNomen.replaceAll("</p>", "");
-        strNomen = strNomen.trim();
-        return strNomen;
     }
 
     @Override
@@ -213,18 +148,5 @@ public class Model implements Comparable<Model> {
                 '}';
     }
 
-    public List<String> getApplicationsSorted() {
-        if (!CollectionUtils.isEmpty ( applications )) {
-            final List<String> apps = new ArrayList<>(applications);
-            Collections.sort(apps);
-            return apps;
-        }
-        return new ArrayList<>();
-    }
-
-    @Override
-    public int compareTo(@NotNull Model other) {
-        return this.getProductNameToSortOn().compareToIgnoreCase(other.getProductNameToSortOn());
-    }
 
 }

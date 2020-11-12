@@ -25,6 +25,10 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.*;
+import be.roots.taconic.pricingguide.pdfdomain.PDFCategory;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
+import be.roots.taconic.pricingguide.pdfdomain.PDFPricing;
+import be.roots.taconic.pricingguide.pdfdomain.PDFPricingLine;
 import be.roots.taconic.pricingguide.respository.TemplateRepository;
 import be.roots.taconic.pricingguide.util.*;
 import com.itextpdf.text.*;
@@ -43,19 +47,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
+
+import static java.util.Arrays.asList;
 
 @Service
 public class PDFServiceImpl implements PDFService {
 
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PDFServiceImpl.class);
-    private final static String DELIMITER = "-!-!-!-!-!-!-!-";
+    private final static String DELIMITER = "£ù£ù£ù£ù£ù£ù£ù£ù";
 
     private static final float COLUMN_RELATIVE_WIDTH_LEFT = 40f;
     private static final float COLUMN_RELATIVE_WIDTH_MIDDLE = 1f;
     private static final float COLUMN_RELATIVE_WIDTH_RIGHT = 59f;
     private static final float LEFT_MARGIN_COVER_TITLE = 325f;
+
+    @Value("${url.base}")
+    private String urlBase;
 
     @Value("${link.email}")
     private String emailLink;
@@ -96,7 +105,7 @@ public class PDFServiceImpl implements PDFService {
     private void init() throws IOException {
 
         final String urlAsString = defaultService.getBaseUrl() + "/pricing_guide_files/pdf_list.json";
-        final String pdfTemplateAsJson = HttpUtil.readString(urlAsString, defaultService.getUserName(), defaultService.getPassword());
+        final String pdfTemplateAsJson = HttpUtil.readString(urlAsString, urlBase, defaultService.getUserName(), defaultService.getPassword());
         if (pdfTemplateAsJson == null) {
             LOGGER.error("Unable to open " + urlAsString);
             throw new RuntimeException("Unable to open " + urlAsString);
@@ -106,7 +115,7 @@ public class PDFServiceImpl implements PDFService {
     }
 
     @Override
-    public byte[] createPricingGuide(Contact contact, List<Model> models) throws IOException, DocumentException {
+    public byte[] createPricingGuide(Contact contact, List<PDFModel> models) throws IOException, DocumentException {
 
         final Toc tableOfContents = new Toc();
         int numberOfModelAndTOCPages = 0;
@@ -118,7 +127,7 @@ public class PDFServiceImpl implements PDFService {
         tableOfContents.addEntries(1, Collections.singletonList("Models"), null, true, Toc.MODEL_SORT_PREFIX);
 
         // add the Model pages to the pdf
-        final byte[] modelPages = createModelPages(contact, models, tableOfContents);
+        final byte[] modelPages = createModelPages(models, tableOfContents);
         numberOfModelAndTOCPages += iTextUtil.numberOfPages(modelPages);
         guide = iTextUtil.merge(guide, modelPages);
 
@@ -177,8 +186,8 @@ public class PDFServiceImpl implements PDFService {
                             "Build on " + gitService.getCommitId()
             );
 
-            info.put("Creator", "Roots Software - http://www.roots.be - info@roots.be");
-            info.put("Author", "Taconic - http://www.taconic.com");
+            info.put("Creator", "Roots Software - https://www.roots.be - info@roots.be");
+            info.put("Author", "Taconic Biosciences - https://www.taconic.com");
 
             stamper.setMoreInfo(info);
 
@@ -190,7 +199,7 @@ public class PDFServiceImpl implements PDFService {
         }
     }
 
-    private byte[] createModelPages(Contact contact, List<Model> models, Toc tableOfContents) throws IOException, DocumentException {
+    private byte[] createModelPages(List<PDFModel> models, Toc tableOfContents) throws IOException, DocumentException {
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Document document = iTextUtil.createNewDocument();
@@ -204,7 +213,7 @@ public class PDFServiceImpl implements PDFService {
         models
                 .stream()
                 .filter(Objects::nonNull)
-                .map(model -> createModelPage(contact, model))
+                .map(this::createModelPage)
                 .forEach(modelPageTables::add)
         ;
 
@@ -244,7 +253,7 @@ public class PDFServiceImpl implements PDFService {
             }
 
             // rerender the table (with a valid pdfWriter)
-            document.add(createModelPage(contact, models.get(modelPageTables.indexOf(modelPageTable))));
+            document.add(createModelPage(models.get(modelPageTables.indexOf(modelPageTable))));
             height += modelPageTable.getTotalHeight();
             pageNames.add(models.get(modelPageTables.indexOf(modelPageTable)).getProductNameProcessed());
 
@@ -252,7 +261,7 @@ public class PDFServiceImpl implements PDFService {
         writer.close();
         document.close();
 
-        byte[] page = bos.toByteArray();
+        final byte[] page = bos.toByteArray();
         tableOfContents.addEntries(2, pageNames, page, true, Toc.MODEL_SORT_PREFIX + "___" + IntUtil.format(++i));
         pages = iTextUtil.merge(pages, page);
 
@@ -325,18 +334,20 @@ public class PDFServiceImpl implements PDFService {
         return pdf;
     }
 
-    private PdfPTable createModelPage(Contact contact, Model model) {
+    private PdfPTable createModelPage(PDFModel model) {
 
         final PdfPTable pdfPTable = new PdfPTable(new float[]{COLUMN_RELATIVE_WIDTH_LEFT, COLUMN_RELATIVE_WIDTH_MIDDLE, COLUMN_RELATIVE_WIDTH_RIGHT});
         pdfPTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth());
-        final PdfPTable modelPricingTables = buildModelPricingTables(contact, model);
+        final PdfPTable modelPricingTables = buildModelPricingTables(model);
         modelPricingTables.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
-        int numberOfPages = (int) Math.ceil(modelPricingTables.getTotalHeight() / (float) iTextUtil.PAGE_HEIGHT);
+
+        final int numberOfPages = countNumberOfPagesForModelPricingTables(modelPricingTables);
+
         if (numberOfPages > 1) {
             final PdfPTable modelDetailSectionTable = new PdfPTable(1);
             modelDetailSectionTable.setTotalWidth(COLUMN_RELATIVE_WIDTH_LEFT);
             for (int i = 0; i < numberOfPages; i++) {
-                PdfPCell cell = cell(buildModelDetailSection(model));
+                final PdfPCell cell = cell(buildModelDetailSection(model));
                 cell.setFixedHeight(iTextUtil.PAGE_HEIGHT + 1);
                 modelDetailSectionTable.addCell(cell);
             }
@@ -350,135 +361,192 @@ public class PDFServiceImpl implements PDFService {
 
     }
 
-    private Phrase processHtmlCodes(String name, Font baseFont, Font symbol) {
+    // iText is not able to render the precise height of the table, so we render the subsection of the document to check how many pages the tables require
+    private int countNumberOfPagesForModelPricingTables(PdfPTable modelPricingTables) {
+
+        try {
+            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            final Document document = iTextUtil.createNewDocument();
+            final PdfWriter writer = PdfWriter.getInstance(document, bos);
+            document.open();
+
+            document.add(modelPricingTables);
+
+            writer.close();
+            document.close();
+
+            return iTextUtil.numberOfPages(bos.toByteArray());
+        } catch (DocumentException | IOException e) {
+            LOGGER.error(e.getLocalizedMessage(), e);
+        }
+
+        return -1;
+    }
+
+    private Phrase processHtmlCodesAsPhrase(String name, Font baseFont, Font symbol) {
+        final Phrase phrase = new Phrase();
+        processHtmlCodes(new Paragraph(), name, baseFont, symbol)
+                .stream()
+                .map(Phrase::getChunks)
+                .flatMap(List::stream)
+                .forEach(phrase::add);
+        return phrase;
+    }
+
+    private List<Paragraph> processHtmlCodes(Paragraph firstParagraph, String name, Font baseFont, Font symbol) {
 
         final Font italicFont = new Font(baseFont);
         italicFont.setStyle(Font.FontStyle.ITALIC.getValue());
 
         final Font normalFont = new Font(baseFont);
 
-        Font usedFont = normalFont;
-
-        final Phrase phrase = new Phrase();
+        final List<Paragraph> paragraphs = new ArrayList<>();
+        paragraphs.add(firstParagraph);
 
         if (!StringUtils.isEmpty(name)) {
 
             for (String[] alphabet : GreekAlphabet.getAlphabet()) {
                 name = name.replaceAll(alphabet[0], DELIMITER + alphabet[0] + DELIMITER);
             }
-            name = name.replaceAll("<sup>|<SUP>", DELIMITER + "<sup>");
-            name = name.replaceAll("</sup>|</SUP>", DELIMITER);
-            name = name.replaceAll("<i>|<I>|<em>|<EM>", DELIMITER + "<i>");
-            name = name.replaceAll("</i>|</I>|</em>|</EM>", DELIMITER + "</i>");
 
-            final String[] tokens = name.split(DELIMITER);
-            for (String token : tokens) {
+            name = SpecialCharactersUtil.encode(
+                    name.replaceAll("<[s|S][u|U][p|P]>", DELIMITER + "<sup>")
+                            // introduce special formatting ea
+                            .replaceAll("</[s|S][u|U][p|P]>", DELIMITER)
+                            .replaceAll("<[i|I]>|<[e|E][m|M]>", DELIMITER + "<i>")
+                            .replaceAll("</[i|I]>|</[e|E][m|M]>", DELIMITER + "</i>")
+                            .replaceAll("<[l|L][i|I]>", DELIMITER + "<li>")
+                            .replaceAll("(<[a|A] .*?<\\/[a|A]>)", DELIMITER + "$1" + DELIMITER)
+                            .replaceAll("<[p|P].*?>(.*?)<\\/[p|P]>", "$1" + DELIMITER + "<br/>")
+                            // introduce new lines
+                            .replaceAll("<[d|D][i|I][v|V]>", DELIMITER + "<br/>")
+                            .replaceAll("<[u|U][l|L].*?>", DELIMITER + "<br/>")
+                            .replaceAll("</[l|L][i|I]>", DELIMITER + "<br/>")
+                            .replaceAll("(<[b|B][r|R]\\s*\\/?>)", DELIMITER + "<br/>")
+                            // remove some
+                            .replaceAll("<\\/[u|U][l|L]>", "")
+                            .replaceAll("</[a|A]>", "")
+                            .replaceAll("<\\/?[b|B]>", "")
+                            .replaceAll("<\\/?[h|H][0-9]>", "")
+                            .replaceAll("<\\/[d|D][i|I][v|V]>", "")
+                            .replaceAll("<\\/?[s|S][t|T][r|R][o|O][n|N][g|G]>", "")
+                            // remove duplicated
+                            .replaceAll("\\s\\s+", " ")  // replace multiple spaces with one
+                            .replaceAll("(" + DELIMITER + ")+", DELIMITER)  // replace multiple spaces with one
+                            .replaceAll("(" + DELIMITER + "<br/>)+", DELIMITER + "<br/>")  // replace multiple spaces with one
+            );
 
-                String text = token;
-                if (text.startsWith("<i>")) {
-                    usedFont = italicFont;
-                    text = text.substring(3);
-                } else if (text.startsWith("</i>")) {
-                    usedFont = normalFont;
-                    text = text.substring(4);
-                }
+            Arrays.stream(name.split(DELIMITER))
+                    .filter(StringUtils::hasText)
+                    .forEach(token -> {
 
-                usedFont.setSize(baseFont.getSize());
+                        final Paragraph currentParagraph = paragraphs.get(paragraphs.size() - 1);
+                        Font usedFont = normalFont;
+                        String text = token;
+                        if (text.startsWith("<i>")) {
+                            usedFont = italicFont;
+                            text = text.substring(3);
+                        } else if (text.startsWith("</i>")) {
+                            text = text.substring(4);
+                        }
 
-                if (text.startsWith("&")) {
-                    final char replacement = GreekAlphabet.getReplacement(text);
-                    if (!Character.isWhitespace(replacement)) {
-                        phrase.add(SpecialSymbol.get(replacement, symbol));
-                    } else {
-                        phrase.add(new Chunk(text, usedFont));
-                    }
-                } else if (text.startsWith("<sup>")) {
+                        usedFont.setSize(baseFont.getSize());
 
-                    final Font superScriptFont = new Font(usedFont);
-                    superScriptFont.setSize(baseFont.getSize() - 1.5f);
+                        if (text.startsWith("&")) {
 
-                    final Chunk superScript = new Chunk(text.substring(5), superScriptFont);
-                    superScript.setTextRise(4f);
-                    phrase.add(superScript);
+                            final char replacement = GreekAlphabet.getReplacement(text);
+                            if (!Character.isWhitespace(replacement)) {
+                                currentParagraph.add(SpecialSymbol.get(replacement, symbol));
+                            } else {
+                                currentParagraph.add(new Chunk(text, usedFont));
+                            }
 
-                } else {
-                    phrase.add(new Chunk(text, usedFont));
-                }
+                        } else if (text.startsWith("<sup>")) {
 
-            }
+                            final Font superScriptFont = new Font(usedFont);
+                            superScriptFont.setSize(baseFont.getSize() * .6f);
+
+                            final Chunk superScript = new Chunk(text.substring(5), superScriptFont);
+                            superScript.setTextRise(3f);
+                            currentParagraph.add(superScript);
+
+                        } else if (text.startsWith("<br/>")) {
+                            currentParagraph.add(new Chunk("\n" + StringUtils.trimLeadingWhitespace(text.substring(5)), usedFont));
+                        } else if (text.startsWith("<li>")) {
+                            final Paragraph listItem = new Paragraph();
+                            listItem.setTabSettings(new TabSettings(asList(new TabStop(10f, TabStop.Alignment.LEFT))));
+                            listItem.setFirstLineIndent(-10f);
+                            listItem.setIndentationLeft(10f);
+                            listItem.add(new Chunk("\u2022", usedFont));
+                            listItem.add(Chunk.TABBING);
+                            listItem.add(new Chunk(StringUtils.trimLeadingWhitespace(text.substring(4)), usedFont));
+                            paragraphs.add(listItem);
+                        } else if (text.matches("<[a|A].*[h|H][r|R][e|E][f|F]*[^>]*>.*")) {
+
+                            final Font linkFont = new Font(usedFont);
+                            linkFont.setColor(iTextUtil.getLinkColor());
+
+                            final Chunk chunk = new Chunk(text.replaceAll("<[a|A].*?[>]", ""), linkFont);
+                            chunk.setAction(new PdfAction(text.replaceAll(".*[h|H][r|R][e|E][f|F]=['|\"](.*?)['|\"].*", "$1")));
+                            currentParagraph.add(chunk);
+
+                        } else {
+                            currentParagraph.add(new Chunk(text, usedFont));
+                        }
+                    });
+
         }
 
-        return phrase;
+        return paragraphs;
     }
 
-    private PdfPTable buildModelPricingTables(Contact contact, Model model) {
+    private PdfPTable buildModelPricingTables(PDFModel model) {
 
         final PdfPTable table = new PdfPTable(1);
         table.setSplitLate(false); // this sees to it that if the first table spans over different pages, the first chunck of the pricingTable is shown on the first page
 
-        final List<Pricing> validPricings = model.validPricings(contact);
+        final List<PDFCategory> categories = model.getCategories();
 
-        if (CollectionUtils.isEmpty(validPricings)) {
+        if (CollectionUtils.isEmpty(categories)) {
             final Chunk chunk = new Chunk("Contact us for pricing on this model", iTextUtil.getFontContactUs());
             chunk.setAction(new PdfAction(contactUsUrl));
             table.addCell(cell(new Phrase(chunk)));
         } else {
-            validPricings.forEach(pricing -> buildModelPricingTable(table, pricing));
+            categories.forEach(category -> buildModelPricingTables(table, category));
         }
 
         return table;
 
     }
 
-    private void buildModelPricingTable(PdfPTable table, Pricing pricing) {
+    private void buildModelPricingTables(PdfPTable table, PDFCategory category) {
 
         // build the pricing table title
         final PdfPTable titleTable = new PdfPTable(1);
-        titleTable.addCell(cell(new Paragraph(pricing.getCategory(), iTextUtil.getFontModelCategory())));
+        titleTable.addCell(cell(processHtmlCodesAsPhrase(category.getNameAsTitle(), iTextUtil.getFontModelCategory(), iTextUtil.getFontModelSymbol())));
         titleTable.addCell(cell(new Paragraph(" ")));
-
-        // build the pricing table details
-        final PdfPTable detailsTable = new PdfPTable(pricing.getNumberOfHeaderItems());
-        detailsTable.setHeaderRows(1); // to re-print the header on each page if the table splits over multiple pages
-        if (pricing.isQuantities()) {
-            detailsTable.addCell(cellH(new Paragraph("Quantity", iTextUtil.getFontModelPricingTitle())));
-        }
-        if (pricing.isAge()) {
-            detailsTable.addCell(cellH(new Paragraph("Age (weeks)", iTextUtil.getFontModelPricingTitle())));
-        }
-        if (pricing.isMale()) {
-            detailsTable.addCell(cellH(new Paragraph("Male", iTextUtil.getFontModelPricingTitle())));
-        }
-        if (pricing.isFemale()) {
-            detailsTable.addCell(cellH(new Paragraph("Female", iTextUtil.getFontModelPricingTitle())));
-        }
-        boolean invert = false;
-        for (Line line : pricing.getLines()) {
-            if (pricing.isQuantities()) {
-                detailsTable.addCell(cellD(new Paragraph(line.getQuantity(), iTextUtil.getFontModelPricingData()), invert));
-            }
-            if (pricing.isAge()) {
-                detailsTable.addCell(cellD(new Paragraph(line.getAge(), iTextUtil.getFontModelPricingData()), invert));
-            }
-            if (pricing.isMale()) {
-                detailsTable.addCell(cellD(new Paragraph(line.getMale(), iTextUtil.getFontModelPricingData()), invert));
-            }
-            if (pricing.isFemale()) {
-                detailsTable.addCell(cellD(new Paragraph(line.getFemale(), iTextUtil.getFontModelPricingData()), invert));
-            }
-            invert = !invert;
-        }
-
-        if (!StringUtils.isEmpty(pricing.getMessage())) {
-            detailsTable.addCell(cell(new Paragraph(pricing.getMessage(), iTextUtil.getFontModelPricingMessage()), pricing.getNumberOfHeaderItems()));
-        }
-        detailsTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
 
         // combine both tables into one table
         final PdfPTable modelTable = new PdfPTable(1);
         modelTable.setTotalWidth(iTextUtil.PAGE_SIZE.getWidth() / 100 * COLUMN_RELATIVE_WIDTH_RIGHT);
         modelTable.addCell(cell(titleTable));
-        modelTable.addCell(cell(detailsTable));
+        if (category.getStandard().hasLines()) {
+            modelTable.addCell(cell(buildModelPricingTables(category.getStandard(), false)));
+        }
+        if (category.getSpecialized().hasLines()) {
+            final PdfPTable subTitleTable = new PdfPTable(1);
+            final PdfPCell subTitleCell = cell(new Paragraph("Specialized Inventory", iTextUtil.getFontModelSpecializedInventory()));
+            subTitleCell.setFixedHeight(15f);
+            subTitleTable.addCell(subTitleCell);
+
+            modelTable.addCell(cell(subTitleTable));
+            modelTable.addCell(cell(buildModelPricingTables(category.getSpecialized(), true)));
+        }
+
+        if (!StringUtils.isEmpty(category.getMessage())) {
+            modelTable.addCell(cell(new Paragraph(category.getMessage(), iTextUtil.getFontModelPricingMessage())));
+            modelTable.addCell(cell(new Paragraph(" ")));
+        }
 
         if (modelTable.getTotalHeight() < iTextUtil.PAGE_HEIGHT) {
             // if the pricing table can fit on a page, then keep it together and if necessary break to the next page
@@ -488,13 +556,53 @@ public class PDFServiceImpl implements PDFService {
             modelTable.setSplitLate(false);
         }
 
-        final PdfPCell cell = cell(modelTable);
-        table.addCell(cell);
+        table.addCell(cell(modelTable));
+
     }
 
-    private PdfPTable buildModelDetailSection(Model model) {
+    private PdfPTable buildModelPricingTables(PDFPricing pricing, boolean specialized) {
 
-        final Phrase p = processHtmlCodes(model.getProductNameProcessed(), iTextUtil.getFontModelTitle(), iTextUtil.getFontModelSymbol());
+        // build the pricing table details
+        final PdfPTable detailsTable = new PdfPTable(pricing.getNumberOfHeaderItems());
+        detailsTable.setHeaderRows(1); // to re-print the header on each page if the table splits over multiple pages
+        if (pricing.hasAge()) {
+            detailsTable.addCell(cellH(new Paragraph(specialized ? "Age / Type" : "Age in weeks", iTextUtil.getFontModelPricingTitle())));
+        }
+        if (pricing.hasQuantities()) {
+            final PdfPCell cell = cellH(new Paragraph("Quantity", iTextUtil.getFontModelPricingTitle()));
+            cell.setColspan(pricing.getQuantities().size());
+            detailsTable.addCell(cell);
+        }
+        if (pricing.hasAge()) {
+            detailsTable.addCell(cellH(new Paragraph("", iTextUtil.getFontModelPricingTitle())));
+        }
+        if (pricing.hasQuantities()) {
+            pricing.getQuantities()
+                    .forEach(q -> detailsTable.addCell(cellH(new Paragraph(q, iTextUtil.getFontModelPricingTitle()))));
+        }
+        boolean invert = false;
+
+        for (final PDFPricingLine pricingLine : pricing.getPricingLines()) {
+            if (pricing.hasAge()) {
+                detailsTable.addCell(cellD(new Paragraph(pricingLine.getAge(), iTextUtil.getFontModelPricingData()), invert));
+            }
+            if (pricing.hasQuantities()) {
+                final boolean invertColor = invert;
+                pricing.getQuantities()
+                        .forEach(q -> detailsTable.addCell(cellD(new Paragraph(pricingLine.getPrice(q), iTextUtil.getFontModelPricingData()), invertColor)));
+            }
+            invert = !invert;
+        }
+
+        detailsTable.addCell(cell(new Paragraph(" "), pricing.getNumberOfHeaderItems()));
+
+        return detailsTable;
+
+    }
+
+    private PdfPTable buildModelDetailSection(PDFModel model) {
+
+        final Phrase p = processHtmlCodesAsPhrase(model.getProductNameProcessed(), iTextUtil.getFontModelTitle(), iTextUtil.getFontModelSymbol());
         for (Chunk c : p.getChunks()) {
             c.setAction(new PdfAction(model.getUrl()));
         }
@@ -508,6 +616,7 @@ public class PDFServiceImpl implements PDFService {
         }
 
         final PdfPTable table = new PdfPTable(1);
+        table.setSplitLate(false);
 
         table.addCell(cell(p));
 
@@ -517,6 +626,7 @@ public class PDFServiceImpl implements PDFService {
         table.addCell(createRow("Application(s)", strAppList.toString(), null));
         table.addCell(createRow("Health Report", model.getHealthReport(), model.getHealthReport()));
         table.addCell(createRow("Species", model.getSpecies(), null));
+        table.addCell(createRow("Licensing", model.getLicense(), null));
 
         table.addCell(cell(createOrderButton(model)));
 
@@ -524,7 +634,7 @@ public class PDFServiceImpl implements PDFService {
 
     }
 
-    private PdfPTable createOrderButton(Model model) {
+    private PdfPTable createOrderButton(PDFModel model) {
 
         final Chunk chunk = new Chunk("Order on taconic.com", iTextUtil.getFontButton());
         chunk.setAction(new PdfAction("http://www.taconic.com/start-an-order?modelNumber=" + model.getModelNumber()));
@@ -554,19 +664,21 @@ public class PDFServiceImpl implements PDFService {
             value = "";
         }
 
-        final Phrase valuePhrase = processHtmlCodes(value.trim(), iTextUtil.getFontModelValue(), iTextUtil.getFontModelSymbol());
-        if (!StringUtils.isEmpty(url)) {
-            for (Chunk chunk : valuePhrase.getChunks()) {
-                chunk.setAction(new PdfAction(url));
-            }
-        }
-        for (Chunk chunk : valuePhrase.getChunks()) {
-            chunk.setLineHeight(13f);
-        }
-        paragraph.add(valuePhrase);
+        final PdfPCell cell = cell(new Phrase(""));
+//        cell.setPaddingBottom(5f);
 
-        final PdfPCell cell = cell(paragraph);
-        cell.setPaddingBottom(5f);
+        processHtmlCodes(paragraph, value.trim(), iTextUtil.getFontModelValue(), iTextUtil.getFontModelSymbol())
+                .stream()
+                .peek(p ->
+                        p.getChunks()
+                                .forEach(chunk -> {
+                                    chunk.setLineHeight(13f);
+                                    if (StringUtils.hasText(url))
+                                        chunk.setAction(new PdfAction(url));
+                                })
+                )
+                .forEach(cell::addElement);
+
         return cell;
     }
 
@@ -610,7 +722,8 @@ public class PDFServiceImpl implements PDFService {
         return cell;
     }
 
-    private byte[] personalize(byte[] pdf, Contact contact, Toc tableOfContents) throws IOException, DocumentException {
+    private byte[] personalize(byte[] pdf, Contact contact, Toc tableOfContents) throws
+            IOException, DocumentException {
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 
@@ -645,7 +758,7 @@ public class PDFServiceImpl implements PDFService {
             text.endText();
 
             // stamp some text on first page of the table of contents page
-            final Image logoImage = iTextUtil.getImageFromByteArray(HttpUtil.readByteArray(pdfTemplate.getLogo().getUrl(), defaultService.getUserName(), defaultService.getPassword()));
+            final Image logoImage = iTextUtil.getImageFromByteArray(HttpUtil.readByteArray(pdfTemplate.getLogo().getUrl(), urlBase, defaultService.getUserName(), defaultService.getPassword()));
             final PdfContentByte tocContent = stamper.getOverContent(tableOfContents.getFirstPageOfToc());
             final float resizeRatio = logoImage.getHeight() / 85; // define the desired height of the log
             tocContent.addImage(logoImage, logoImage.getWidth() / resizeRatio, 0, 0, logoImage.getHeight() / resizeRatio, 59, 615);
@@ -705,11 +818,11 @@ public class PDFServiceImpl implements PDFService {
 
                 final HashMap<String, Object> bookmark = new HashMap<>();
 
-                String name = tocEntry.getName();
-                name = name.replaceAll("<sup>", "");
-                name = name.replaceAll("</sup>", "");
-                name = name.replaceAll("<i.*?>", "");
-                name = name.replaceAll("</i>", "");
+                String name = tocEntry.getName()
+                        .replaceAll("<sup>", "")
+                        .replaceAll("</sup>", "")
+                        .replaceAll("<i.*?>", "")
+                        .replaceAll("</i>", "");
                 name = GreekAlphabet.replaceGreekHtmlCodesWithUnicode(name);
 
                 bookmark.put("Title", name);
@@ -785,11 +898,11 @@ public class PDFServiceImpl implements PDFService {
                         font = iTextUtil.getFontTocBold();
                     }
 
-                    final Phrase p = processHtmlCodes(tocEntry.getLevelString() + tocEntry.getName(), font, iTextUtil.getFontTocSymbol());
+                    final Phrase p = processHtmlCodesAsPhrase(tocEntry.getLevelString() + tocEntry.getName(), font, iTextUtil.getFontTocSymbol());
                     p.add(new Chunk("", iTextUtil.getFontToc()));
                     if (tocEntry.isShowingPageNumber()) {
                         p.add(new Chunk(new DottedLineSeparator()));
-                        p.add(new Chunk("  " + String.valueOf(tocEntry.getFinalPageNumber()), iTextUtil.getFontToc()));
+                        p.add(new Chunk("  " + tocEntry.getFinalPageNumber(), iTextUtil.getFontToc()));
                     }
 
                     for (Chunk chunk : p.getChunks()) {
@@ -819,7 +932,8 @@ public class PDFServiceImpl implements PDFService {
 
     }
 
-    private byte[] enableLinkToWebsite(byte[] pdf, Toc tableOfContents, int numberOfModelAndTOCPages) throws IOException, DocumentException {
+    private byte[] enableLinkToWebsite(byte[] pdf, Toc tableOfContents, int numberOfModelAndTOCPages) throws
+            IOException, DocumentException {
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
 

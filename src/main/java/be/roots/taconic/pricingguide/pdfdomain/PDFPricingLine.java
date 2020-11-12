@@ -1,4 +1,4 @@
-package be.roots.taconic.pricingguide.service;
+package be.roots.taconic.pricingguide.pdfdomain;
 
 /*
    This file is part of the Taconic Pricing Guide generator.  This code will
@@ -24,18 +24,34 @@ package be.roots.taconic.pricingguide.service;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import be.roots.taconic.pricingguide.domain.Contact;
-import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
+import be.roots.taconic.pricingguide.domain.Line;
+import be.roots.taconic.pricingguide.domain.Price;
+import org.springframework.util.StringUtils;
 
-public interface MonitoringService {
+public class PDFPricingLine {
 
-    boolean shouldBeMonitored(String remoteIp);
+    private final Line line;
 
-    void start(String name, String id, String remoteIp, long startTimestamp);
-    void stop(String name, String id, String remoteIp, Contact contact);
+    public PDFPricingLine(Line line) {
+        this.line = line;
+    }
 
-    void sendAlive();
+    public String getAge() {
+        return this.line.getAge();
+    }
 
-    void incrementCounter(PDFModel model, Contact contact);
+    public String getPrice(final String quantity) {
+        return this.line.getPrices()
+                .stream()
+                .filter(price -> quantity.equals(price.getQuantity()))
+                .findFirst()
+                .orElse(new Price())
+                .getPrice()
+                ;
+    }
+
+    public boolean hasAge() {
+        return StringUtils.hasText(this.line.getAge());
+    }
 
 }

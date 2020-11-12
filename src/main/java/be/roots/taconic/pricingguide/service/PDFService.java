@@ -25,7 +25,7 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
-import be.roots.taconic.pricingguide.domain.Model;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import com.itextpdf.text.DocumentException;
 
 import java.io.IOException;
@@ -33,6 +33,6 @@ import java.util.List;
 
 public interface PDFService {
 
-    byte[] createPricingGuide(Contact contact, List<Model> models) throws IOException, DocumentException;
+    byte[] createPricingGuide(Contact contact, List<PDFModel> models) throws IOException, DocumentException;
 
 }

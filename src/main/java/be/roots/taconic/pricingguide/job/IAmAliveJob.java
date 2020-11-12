@@ -28,8 +28,6 @@ import be.roots.taconic.pricingguide.service.MonitoringService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.mail.MessagingException;
-
 @Component
 public class IAmAliveJob {
 
@@ -40,7 +38,7 @@ public class IAmAliveJob {
     }
 
     @Scheduled(fixedRate = 60 * 1000 )
-    public void sendIAmAlive() throws MessagingException {
+    public void sendIAmAlive() {
         monitoringService.sendAlive();
     }
 

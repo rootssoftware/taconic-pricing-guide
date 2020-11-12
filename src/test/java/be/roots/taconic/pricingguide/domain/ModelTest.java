@@ -1,40 +1,57 @@
 package be.roots.taconic.pricingguide.domain;
 
 /**
- *  This file is part of the Taconic Pricing Guide generator.  This code will
- *  generate a full featured PDF Pricing Guide by using using iText
- *  (http://www.itextpdf.com) based on JSON files.
- *
- *  Copyright (C) 2015  Roots nv
- *  Authors: Koen Dehaen (koen.dehaen@roots.be)
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as
- *  published by the Free Software Foundation, either version 3 of the
- *  License, or (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *
- *  You should have received a copy of the GNU Affero General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *  For more information, please contact Roots nv at this address: support@roots.be
- *
+ * This file is part of the Taconic Pricing Guide generator.  This code will
+ * generate a full featured PDF Pricing Guide by using using iText
+ * (http://www.itextpdf.com) based on JSON files.
+ * <p>
+ * Copyright (C) 2015  Roots nv
+ * Authors: Koen Dehaen (koen.dehaen@roots.be)
+ * <p>
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * <p>
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ * <p>
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * <p>
+ * For more information, please contact Roots nv at this address: support@roots.be
  */
 
+import be.roots.taconic.pricingguide.PricingGuideApplication;
+import be.roots.taconic.pricingguide.service.ModelService;
 import be.roots.taconic.pricingguide.util.DefaultUtil;
+import be.roots.taconic.pricingguide.util.JsonUtil;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.util.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = PricingGuideApplication.class)
+@WebAppConfiguration
 public class ModelTest {
+
+    @Autowired
+    private ModelService modelService;
 
     @Test
     public void testValidPricings_bothPricingsAvailable() {
@@ -42,20 +59,20 @@ public class ModelTest {
         Model m = new Model();
 
         m.setPricing(new ArrayList<>());
-        m.getPricing().add ( buildPricing ( true, Currency.EUR, "A" ) );
+        m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
         m.getPricing().add(buildPricing(false, Currency.EUR, "A" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT));
 
-        List<Pricing> pricings = m.validPricings(nonProfitContact());
+        List<Pricing> pricings = modelService.convert(m, nonProfitContact()).validPricings();
 
-        assertNotNull ( pricings );
+        assertNotNull(pricings);
         assertEquals(1, pricings.size());
-        assertEquals(false, pricings.get(0).isProfit());
+        assertFalse(pricings.get(0).isProfit());
 
-        pricings = m.validPricings(profitContact());
+        pricings = modelService.convert(m, profitContact()).validPricings();
 
-        assertNotNull ( pricings );
+        assertNotNull(pricings);
         assertEquals(1, pricings.size());
-        assertEquals ( true, pricings.get(0).isProfit() );
+        assertTrue(pricings.get(0).isProfit());
 
     }
 
@@ -65,19 +82,19 @@ public class ModelTest {
         Model m = new Model();
 
         m.setPricing(new ArrayList<>());
-        m.getPricing().add ( buildPricing ( true, Currency.EUR, "A" ) );
+        m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
 
-        List<Pricing> pricings = m.validPricings(nonProfitContact());
+        List<Pricing> pricings = modelService.convert(m, nonProfitContact()).validPricings();
 
-        assertNotNull ( pricings );
+        assertNotNull(pricings);
         assertEquals(1, pricings.size());
-        assertEquals(true, pricings.get(0).isProfit());
+        assertTrue(pricings.get(0).isProfit());
 
-        pricings = m.validPricings(profitContact());
+        pricings = modelService.convert(m, profitContact()).validPricings();
 
-        assertNotNull ( pricings );
+        assertNotNull(pricings);
         assertEquals(1, pricings.size());
-        assertEquals ( true, pricings.get(0).isProfit() );
+        assertTrue(pricings.get(0).isProfit());
 
     }
 
@@ -89,24 +106,24 @@ public class ModelTest {
         m.setPricing(new ArrayList<>());
         m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
         m.getPricing().add(buildPricing(true, Currency.EUR, "B"));
-        m.getPricing().add ( buildPricing ( false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT ) );
+        m.getPricing().add(buildPricing(false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT));
 
-        List<Pricing> pricings = m.validPricings(nonProfitContact());
+        List<Pricing> pricings = modelService.convert(m, nonProfitContact()).validPricings();
 
         assertNotNull(pricings);
         assertEquals(2, pricings.size());
-        assertEquals("A", pricings.get(0).getCategoryCode());
-        assertEquals(true, pricings.get(0).isProfit());
-        assertEquals("B", pricings.get(1).getCategoryCode());
-        assertEquals(false, pricings.get(1).isProfit());
+        assertEquals("A-M CATEGORY", pricings.get(0).getCategoryCode());
+        assertTrue(pricings.get(0).isProfit());
+        assertEquals("B-M CATEGORY", pricings.get(1).getCategoryCode());
+        assertFalse(pricings.get(1).isProfit());
 
-        pricings = m.validPricings(profitContact());
+        pricings = modelService.convert(m, profitContact()).validPricings();
 
         assertEquals(2, pricings.size());
-        assertEquals("A", pricings.get(0).getCategoryCode());
-        assertEquals(true, pricings.get(0).isProfit());
-        assertEquals("B", pricings.get(1).getCategoryCode());
-        assertEquals(true, pricings.get(1).isProfit());
+        assertEquals("A-M CATEGORY", pricings.get(0).getCategoryCode());
+        assertTrue(pricings.get(0).isProfit());
+        assertEquals("B-M CATEGORY", pricings.get(1).getCategoryCode());
+        assertTrue(pricings.get(1).isProfit());
 
     }
 
@@ -118,27 +135,27 @@ public class ModelTest {
         m.setPricing(new ArrayList<>());
         m.getPricing().add(buildPricing(true, Currency.EUR, "A"));
         m.getPricing().add(buildPricing(true, Currency.EUR, "B"));
-        m.getPricing().add ( buildPricing ( false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT ) );
+        m.getPricing().add(buildPricing(false, Currency.EUR, "B" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT));
         m.getPricing().add(buildPricing(true, Currency.USD, "C"));
-        m.getPricing().add ( buildPricing ( false, Currency.USD, "C" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT ) );
+        m.getPricing().add(buildPricing(false, Currency.USD, "C" + DefaultUtil.PRICING_CATEGORY_NON_PROFIT));
         m.getPricing().add(buildPricing(true, Currency.USD, "D"));
 
-        List<Pricing> pricings = m.validPricings(nonProfitContact());
+        List<Pricing> pricings = modelService.convert(m, nonProfitContact()).validPricings();
 
         assertNotNull(pricings);
         assertEquals(2, pricings.size());
-        assertEquals("A", pricings.get(0).getCategoryCode());
-        assertEquals(true, pricings.get(0).isProfit());
-        assertEquals("B", pricings.get(1).getCategoryCode());
-        assertEquals(false, pricings.get(1).isProfit());
+        assertEquals("A-M CATEGORY", pricings.get(0).getCategoryCode());
+        assertTrue(pricings.get(0).isProfit());
+        assertEquals("B-M CATEGORY", pricings.get(1).getCategoryCode());
+        assertFalse(pricings.get(1).isProfit());
 
-        pricings = m.validPricings(profitContact());
+        pricings = modelService.convert(m, profitContact()).validPricings();
 
         assertEquals(2, pricings.size());
-        assertEquals("A", pricings.get(0).getCategoryCode());
-        assertEquals(true, pricings.get(0).isProfit());
-        assertEquals("B", pricings.get(1).getCategoryCode());
-        assertEquals(true, pricings.get(1).isProfit());
+        assertEquals("A-M CATEGORY", pricings.get(0).getCategoryCode());
+        assertTrue(pricings.get(0).isProfit());
+        assertEquals("B-M CATEGORY", pricings.get(1).getCategoryCode());
+        assertTrue(pricings.get(1).isProfit());
 
     }
 
@@ -149,34 +166,64 @@ public class ModelTest {
 
         m.setPricing(new ArrayList<>());
 
-        List<Pricing> pricings = m.validPricings(nonProfitContact());
+        List<Pricing> pricings = modelService.convert(m, nonProfitContact()).validPricings();
 
         assertNotNull(pricings);
         assertEquals(0, pricings.size());
 
-        pricings = m.validPricings(profitContact());
+        pricings = modelService.convert(m, profitContact()).validPricings();
 
         assertNotNull(pricings);
         assertEquals(0, pricings.size());
 
     }
 
+    @Test
+    public void testJsonParsing() throws IOException {
+
+        final String file = FileUtils.readFileToString(new ClassPathResource("b6-new.json").getFile());
+
+        assertTrue(StringUtils.hasText(file));
+
+        final Model model = JsonUtil.asObject(file, Model.class);
+
+        assertNotNull(model);
+
+        assertTrue(model.getApplications().contains("ADMET"));
+        assertEquals("https://etaconic.com/health/health-monitoring-index-for-animal-model?modelno=B6", model.getHealthReport());
+        assertEquals("This model is sold subject to Taconic's Terms and Conditions.", model.getLicense());
+
+        assertNotNull(model.getPricing());
+        assertFalse(model.getPricing().isEmpty());
+
+        final Pricing pricing = model.getPricing().get(0);
+
+        assertTrue(pricing.isProfit());
+        assertEquals(Currency.USD, pricing.getCurrency());
+        assertNotNull(pricing.getLines());
+        assertFalse(pricing.getLines().isEmpty());
+
+        assertTrue(StringUtils.hasText(pricing.getMessage()));
+        assertTrue(StringUtils.hasText(pricing.getCategory()));
+
+    }
+
     private Contact nonProfitContact() {
-        Contact c = new Contact();
+        final Contact c = new Contact();
         c.setCurrency(Currency.NEUR);
         return c;
     }
 
     private Contact profitContact() {
-        Contact c = new Contact();
+        final Contact c = new Contact();
         c.setCurrency(Currency.EUR);
         return c;
     }
 
-    private Pricing buildPricing( boolean profit, Currency currency, String category ) {
-        Pricing p = new Pricing();
+    private Pricing buildPricing(boolean profit, Currency currency, String category) {
+        final Pricing p = new Pricing();
         p.setProfit(profit);
-        p.setCategory(category);
+        p.setCategory(category + "-M category");
         p.setCurrency(currency);
         return p;
     }

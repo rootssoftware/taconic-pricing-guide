@@ -2,12 +2,12 @@ package be.roots.taconic.pricingguide.domain;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ContactTest {
 
     @Test
-    public void getFullName() throws Exception {
+    public void getFullName() {
 
         final Contact contact = new Contact();
 

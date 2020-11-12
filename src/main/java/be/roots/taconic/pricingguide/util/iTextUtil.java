@@ -64,6 +64,7 @@ public class iTextUtil {
     private static final Font FONT_MODEL_TITLE;
     private static final Font FONT_MODEL_SYMBOL;
     private static final Font FONT_MODEL_CATEGORY;
+    private static final Font FONT_MODEL_SPECIALIZED_INVENTORY;
     private static final Font FONT_MODEL_KEY;
     private static final Font FONT_MODEL_VALUE;
     private static final Font FONT_MODEL_PRICING_TITLE;
@@ -78,6 +79,7 @@ public class iTextUtil {
     private static final BaseColor TRIANGLE;
     private static final BaseColor GREEN;
     private static final BaseColor GREEN_INVERT;
+    private static final BaseColor RED;
 
     static {
 
@@ -87,6 +89,7 @@ public class iTextUtil {
         TRIANGLE = new BaseColor(0xf4, 0x24, 0x34);
         GREEN = new BaseColor ( 0x32, 0x80, 0x90 );
         GREEN_INVERT = new BaseColor ( 0xd9, 0xe8, 0xeb );
+        RED = new BaseColor(0xed, 0x20, 0x28);
 
         BaseFont boldFont = null;
         BaseFont lightFont = null;
@@ -129,8 +132,9 @@ public class iTextUtil {
         FONT_MODEL_TITLE = new Font ( mediumFont, 12, Font.BOLD, PURPLE);
         FONT_MODEL_SYMBOL = new Font(Font.FontFamily.SYMBOL, 12, Font.BOLD, PURPLE);
         FONT_MODEL_CATEGORY = new Font ( mediumFont, 10, Font.BOLD, PURPLE);
-        FONT_MODEL_KEY = new Font ( mediumFont, 8, Font.BOLD, BaseColor.DARK_GRAY);
-        FONT_MODEL_VALUE = new Font ( lightFont, 8, Font.NORMAL, BaseColor.DARK_GRAY);
+        FONT_MODEL_SPECIALIZED_INVENTORY = new Font ( mediumFont, 8, Font.BOLD, PURPLE);
+        FONT_MODEL_KEY = new Font ( mediumFont, 7, Font.BOLD, BaseColor.DARK_GRAY);
+        FONT_MODEL_VALUE = new Font ( lightFont, 7, Font.NORMAL, BaseColor.DARK_GRAY);
 
         FONT_MODEL_PRICING_TITLE = new Font ( lightFont, 7, Font.BOLD, BaseColor.WHITE);
         FONT_MODEL_PRICING_DATA = new Font ( lightFont, 7, Font.NORMAL, BaseColor.DARK_GRAY);
@@ -160,6 +164,10 @@ public class iTextUtil {
 
     public static BaseColor getRowInvertColor() {
         return GREEN_INVERT;
+    }
+
+    public static BaseColor getLinkColor() {
+        return RED;
     }
 
     public static Font getFontCoverCurrency() {
@@ -216,6 +224,10 @@ public class iTextUtil {
 
     public static Font getFontModelCategory() {
         return FONT_MODEL_CATEGORY;
+    }
+
+    public static Font getFontModelSpecializedInventory() {
+        return FONT_MODEL_SPECIALIZED_INVENTORY;
     }
 
     public static Font getFontModelPricingTitle() {

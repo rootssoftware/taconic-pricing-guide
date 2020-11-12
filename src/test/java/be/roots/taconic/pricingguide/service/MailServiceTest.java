@@ -27,12 +27,13 @@ package be.roots.taconic.pricingguide.service;
 
 import be.roots.taconic.pricingguide.PricingGuideApplication;
 import be.roots.taconic.pricingguide.domain.Contact;
-import be.roots.taconic.pricingguide.domain.Model;
+import be.roots.taconic.pricingguide.domain.Currency;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import com.itextpdf.text.DocumentException;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -45,30 +46,40 @@ import java.util.List;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
+@Ignore
 public class MailServiceTest {
 
-    @Autowired
-    private MailService mailService;
+    private final MailService mailService;
+    private final PDFService pdfService;
+    private final ModelRepository modelRepository;
+    private final ModelService modelService;
 
-    @Autowired
-    private PDFService pdfService;
-
-    @Autowired
-    private ModelRepository modelRepository;
+    public MailServiceTest(MailService mailService, PDFService pdfService, ModelRepository modelRepository, ModelService modelService) {
+        this.mailService = mailService;
+        this.pdfService = pdfService;
+        this.modelRepository = modelRepository;
+        this.modelService = modelService;
+    }
 
     @Test
     public void testMailSending() throws IOException, DocumentException, MessagingException {
 
-        final Contact contact = new Contact();
-        contact.setFirstName("Koen");
-        contact.setLastName("Dehaen");
-        contact.setEmail("koen.dehaen@roots.be");
+        final Contact contact = createContact();
 
-        List<Model> models = modelRepository.findFor(Collections.singletonList("WKY"));
+        List<PDFModel> models = modelService.convert(modelRepository.findFor(Collections.singletonList("WKY")), contact);
         byte[] guide = pdfService.createPricingGuide(contact, models);
 
         mailService.sendMail( contact, guide );
 
+    }
+
+    private Contact createContact() {
+        final Contact contact = new Contact();
+        contact.setFirstName("Koen");
+        contact.setLastName("Dehaen");
+        contact.setEmail("koen.dehaen@roots.be");
+        contact.setCurrency(Currency.EUR);
+        return contact;
     }
 
 }

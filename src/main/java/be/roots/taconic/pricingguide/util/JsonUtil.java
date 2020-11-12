@@ -24,7 +24,8 @@ package be.roots.taconic.pricingguide.util;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -37,6 +38,7 @@ public class JsonUtil {
 
     public static <T> T asObject(String json, Class<T> clazz) throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
         return mapper.readValue(json, clazz);
     }
 

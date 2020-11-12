@@ -29,10 +29,10 @@ import be.roots.taconic.pricingguide.PricingGuideApplication;
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.Currency;
 import be.roots.taconic.pricingguide.domain.Model;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import com.itextpdf.text.DocumentException;
 import org.apache.commons.io.IOUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -50,11 +50,11 @@ import java.util.List;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
-@Ignore
 public class PDFServiceTest {
 
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PDFServiceTest.class);
@@ -66,11 +66,14 @@ public class PDFServiceTest {
 
     @Autowired
     private ModelRepository modelRepository;
-    
+
+    @Autowired
+    private ModelService modelService;
+
     @Test
     public void testCreatePricingGuideForOneModel() throws IOException, DocumentException {
 
-        final Model model = modelRepository.findOne("WH");
+        final PDFModel model = modelService.convert(modelRepository.findOne("ABBN12"), buildContact());
 
         saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), Collections.singletonList(model)), 13);
 
@@ -79,11 +82,10 @@ public class PDFServiceTest {
     @Test
     public void testCreatePricingGuideForToc() throws IOException, DocumentException {
 
-        final Model model = modelRepository.findOne("WH");
+        final PDFModel model = modelService.convert(modelRepository.findOne("WH"), buildContact());
 
-        List<Model> models = new ArrayList<>();
+        List<PDFModel> models = new ArrayList<>();
 
-        models.clear();
         for ( int i = 0; i < 7 ; i ++ ) {             models.add (model);         }
         saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), models), 7);
 
@@ -117,7 +119,7 @@ public class PDFServiceTest {
         models.add ( "LEWIS");
         models.add ( "4026");
 
-        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelRepository.findFor(models)), 17);
+        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelService.convert(modelRepository.findFor(models), buildContact())), 17);
 
     }
 
@@ -130,7 +132,7 @@ public class PDFServiceTest {
         // The SW model should have different price models that span multiple pages
         models.add ( "SW");
 
-        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelRepository.findFor(models)), 17);
+        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelService.convert(modelRepository.findFor(models), buildContact())), 17);
 
     }
 
@@ -141,7 +143,7 @@ public class PDFServiceTest {
         models.add ( "NOG");
         models.add ("HSCFTL-NOG");
 
-        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelRepository.findFor(models)), 15);
+        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelService.convert(modelRepository.findFor(models), buildContact())), 15);
 
     }
 
@@ -154,16 +156,16 @@ public class PDFServiceTest {
 
         final List<Model> models = modelRepository.findFor(modelIds);
 
-        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), models), 104);
+        saveAndTestByteArray(pdfService.createPricingGuide(buildContact(), modelService.convert(models, buildContact())), 104);
 
     }
 
     @Test
     public void testCreatePricingGuideForAllModelsAllCurrencies() throws IOException, DocumentException {
 
-        final List<Model> models = modelRepository.findAll();
-
         final Contact contact = buildContact();
+
+        final List<PDFModel> models = modelService.convert(modelRepository.findAll(), buildContact());
 
         contact.setCurrency(Currency.EUR);
         saveAndTestByteArray(pdfService.createPricingGuide(contact, models), 100);
@@ -190,7 +192,7 @@ public class PDFServiceTest {
         return contact;
     }
 
-    public static void saveAndTestByteArray(byte[] fileAsByteArray, Integer numberOfPagesExpected) throws IOException, DocumentException {
+    public static void saveAndTestByteArray(byte[] fileAsByteArray, Integer numberOfPagesExpected) {
 
         try {
 
@@ -198,7 +200,10 @@ public class PDFServiceTest {
 
             assertNotNull ( clone );
 
-            File file = File.createTempFile("result-" + Thread.currentThread().getStackTrace()[2].getMethodName() + "-" + numberOfPagesExpected+ "-", ".pdf");
+            final File tempFile = File.createTempFile(Thread.currentThread().getStackTrace()[2].getMethodName() + "-" + numberOfPagesExpected+ "-", ".pdf");
+            final File tempDir = new File(tempFile.getParent(), "_taconic");
+            if (!tempDir.exists()) tempDir.mkdirs();
+            final File file = new File (tempDir, tempFile.getName());
             IOUtils.write(fileAsByteArray, new FileOutputStream(file));
 
             if ( MANUAL_MODE ) {
@@ -208,11 +213,11 @@ public class PDFServiceTest {
                 assertTrue ( file.length() > 0 );
                 file.delete();
             }
-
+            tempFile.delete();
 
         } catch (IOException e) {
             e.printStackTrace();
-            assertTrue ( false );
+            fail();
         }
     }
 

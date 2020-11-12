@@ -32,6 +32,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -47,6 +48,9 @@ public class ModelRepositoryImpl implements ModelRepository {
 
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ModelRepositoryImpl.class);
 
+    @Value("${url.base}")
+    private String urlBase;
+
     private final DefaultService defaultService;
 
     private final LoadingCache<String, Model> modelLoadingCache = CacheBuilder.newBuilder()
@@ -55,7 +59,7 @@ public class ModelRepositoryImpl implements ModelRepository {
             .build(
                     new CacheLoader<>() {
                         public Model load(String key) throws IOException {
-                            final String jsonAsString = HttpUtil.readString(defaultService.getModelUrl() + "/" + key + ".json", defaultService.getUserName(), defaultService.getPassword());
+                            final String jsonAsString = HttpUtil.readString(defaultService.getModelUrl() + "/" + key + ".json", urlBase, defaultService.getUserName(), defaultService.getPassword());
                             if (jsonAsString != null) {
                                 return JsonUtil.asObject(jsonAsString, Model.class);
                             }
@@ -110,7 +114,7 @@ public class ModelRepositoryImpl implements ModelRepository {
 
     @Override
     public List<Model> findAll() throws IOException {
-        final String jsonAsString = HttpUtil.readString(defaultService.getModelCatalogUrl(), defaultService.getUserName(), defaultService.getPassword());
+        final String jsonAsString = HttpUtil.readString(defaultService.getModelCatalogUrl(), urlBase, defaultService.getUserName(), defaultService.getPassword());
         List<HashMap> catalog = null;
         if ( jsonAsString != null ) {
             catalog = JsonUtil.asObject(jsonAsString, List.class);

@@ -30,8 +30,8 @@ import be.roots.taconic.pricingguide.hubspot.FormSubmission;
 import be.roots.taconic.pricingguide.hubspot.RecentContact;
 import be.roots.taconic.pricingguide.hubspot.RecentContacts;
 import be.roots.taconic.pricingguide.util.HttpUtil;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -44,6 +44,9 @@ import java.io.IOException;
 public class HubSpotServiceImpl implements HubSpotService {
     
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(HubSpotService.class);
+
+    @Value("${url.base}")
+    private String urlBase;
 
     @Value("${api.key}")
     private String apiKey;
@@ -104,7 +107,7 @@ public class HubSpotServiceImpl implements HubSpotService {
 
     public Contact getContactDetailsFor(String url) throws IOException {
         //Call Contact Api to get individual information
-        final String response2 = HttpUtil.readString(url);
+        final String response2 = HttpUtil.readString(url, urlBase);
         final ObjectMapper hsContactMap = new ObjectMapper();
         final JsonNode contactjson = hsContactMap.readTree(response2);
         final JsonNode contactProperties = contactjson.get("properties");
@@ -131,12 +134,12 @@ public class HubSpotServiceImpl implements HubSpotService {
         return null;
     }
 
-    private String parse ( JsonNode jsonProperties, String key ) {
+    private String parse (JsonNode jsonProperties, String key ) {
         if ( jsonProperties != null
                 && jsonProperties.get(key) != null
                 && jsonProperties.get(key).get("value") != null ) {
 
-            return jsonProperties.get(key).get("value").getTextValue();
+            return jsonProperties.get(key).get("value").asText();
 
         }
         return null;

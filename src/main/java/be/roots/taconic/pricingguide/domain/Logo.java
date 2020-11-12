@@ -24,7 +24,7 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class Logo {
 

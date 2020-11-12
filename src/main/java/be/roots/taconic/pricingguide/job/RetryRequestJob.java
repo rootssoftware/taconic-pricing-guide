@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.mail.MessagingException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class RetryRequestJob {
     }
 
     @Scheduled(fixedDelay = 30000)
-    public void retryPricingGuideRequestForUnfoundContact() throws MessagingException {
+    public void retryPricingGuideRequestForUnfoundContact() {
 
         final List<Request> unsendRequests = getUnsendRequests();
         for ( Request unsendRequest : unsendRequests ) {

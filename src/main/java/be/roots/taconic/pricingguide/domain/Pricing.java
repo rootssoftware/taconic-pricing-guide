@@ -25,60 +25,28 @@ package be.roots.taconic.pricingguide.domain;
  */
 
 import be.roots.taconic.pricingguide.util.DefaultUtil;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Pricing {
 
     private boolean profit;
-    private Currency currency;
-    private String category;
+    private HealthStatus healthstatus;
     private List<Line> lines;
+    private List<String> quantities;
     private String message;
+    private Currency currency;
+    private List<Line> linesSpecialized;
+    private List<String> quantitiesSpecialized;
+    private String category;
+    private String gender;
 
-    private boolean initialized = false;
-    private boolean quantities = false;
-    private boolean female = false;
-    private boolean male = false;
-    private boolean age = false;
-    private int numberOfHeaderItems = 0;
-
-    private void init() {
-        if ( ! initialized ) {
-            initialized = true;
-            for ( Line line : lines ) {
-                if ( ! StringUtils.isEmpty(line.getQuantity()) ) {
-                    quantities = true;
-                }
-                if ( ! StringUtils.isEmpty(line.getAge()) ) {
-                    age = true;
-                }
-                if ( ! StringUtils.isEmpty(line.getFemale()) ) {
-                    female = true;
-                }
-                if ( ! StringUtils.isEmpty(line.getMale()) ) {
-                    male = true;
-                }
-            }
-            if ( isQuantities() ) {
-                numberOfHeaderItems++;
-            }
-            if ( isAge() ) {
-                numberOfHeaderItems++;
-            }
-            if ( isFemale() ) {
-                numberOfHeaderItems++;
-            }
-            if ( isMale() ) {
-                numberOfHeaderItems++;
-            }
-        }
-    }
-
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public boolean isProfit() {
         return profit;
     }
@@ -87,7 +55,7 @@ public class Pricing {
         this.profit = profit;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public Currency getCurrency() {
         return currency;
     }
@@ -96,7 +64,16 @@ public class Pricing {
         this.currency = currency;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public HealthStatus getHealthstatus() {
+        return healthstatus;
+    }
+
+    public void setHealthstatus(HealthStatus healthstatus) {
+        this.healthstatus = healthstatus;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getCategory() {
         return category;
     }
@@ -107,13 +84,13 @@ public class Pricing {
 
     @JsonIgnore
     public String getCategoryCode() {
-        if ( ! StringUtils.isEmpty(category)) {
-            return category.replaceAll(DefaultUtil.PRICING_CATEGORY_NON_PROFIT, "" ).toUpperCase().trim();
+        if (!StringUtils.isEmpty(category)) {
+            return category.replaceAll(DefaultUtil.PRICING_CATEGORY_NON_PROFIT, "").toUpperCase().trim();
         }
         return category;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public List<Line> getLines() {
         return lines;
     }
@@ -122,7 +99,16 @@ public class Pricing {
         this.lines = lines;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public List<String> getQuantities() {
+        return quantities;
+    }
+
+    public void setQuantities(List<String> quantities) {
+        this.quantities = quantities;
+    }
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     public String getMessage() {
         return message;
     }
@@ -131,50 +117,41 @@ public class Pricing {
         this.message = message;
     }
 
-    @JsonIgnore
-    public boolean isQuantities() {
-        init();
-        return quantities;
+    public List<Line> getLinesSpecialized() {
+        return linesSpecialized;
     }
 
-    @JsonIgnore
-    public boolean isFemale() {
-        init();
-        return female;
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    public List<String> getQuantitiesSpecialized() {
+        return quantitiesSpecialized;
     }
 
-    @JsonIgnore
-    public boolean isMale() {
-        init();
-        return male;
+    public void setQuantitiesSpecialized(List<String> quantitiesSpecialized) {
+        this.quantitiesSpecialized = quantitiesSpecialized;
     }
 
-    @JsonIgnore
-    public boolean isAge() {
-        init();
-        return age;
+    public void setLinesSpecialized(List<Line> linesSpecialized) {
+        this.linesSpecialized = linesSpecialized;
     }
 
-    @JsonIgnore
-    public int getNumberOfHeaderItems() {
-        init();
-        return numberOfHeaderItems;
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 
     @Override
     public String toString() {
         return "Pricing{" +
                 "profit=" + profit +
-                ", currency=" + currency +
-                ", category='" + category + '\'' +
                 ", lines=" + lines +
                 ", message='" + message + '\'' +
-                ", initialized=" + initialized +
-                ", quantities=" + quantities +
-                ", female=" + female +
-                ", male=" + male +
-                ", age=" + age +
-                ", numberOfHeaderItems=" + numberOfHeaderItems +
+                ", currency=" + currency +
+                ", linesSpecialized=" + linesSpecialized +
+                ", category='" + category + '\'' +
+                ", gender='" + gender + '\'' +
                 '}';
     }
 

@@ -24,6 +24,7 @@ package be.roots.taconic.pricingguide.service;
  *  For more information, please contact Roots nv at this address: support@roots.be
  *
  */
+
 import be.roots.taconic.pricingguide.PricingGuideApplication;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +34,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.annotation.Resource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
@@ -44,7 +46,7 @@ public class MonitoringServiceImplTest {
     private MonitoringService monitoringService;
 
     @Test
-    public void shouldBeMonitored() throws Exception {
+    public void shouldBeMonitored() {
 
         assertFalse ( monitoringService.shouldBeMonitored ( "82.22.22.1" ) );
         assertTrue ( monitoringService.shouldBeMonitored ( "82.22.22.3" ) );

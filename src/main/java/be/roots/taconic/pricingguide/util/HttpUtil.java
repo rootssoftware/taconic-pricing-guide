@@ -29,9 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -41,16 +39,16 @@ public class HttpUtil {
     private static final String REQUEST_METHOD = "GET";
     private static final int CONNECT_TIMEOUT = 10000;
 
-    public static String readString(String urlAsString) {
-        return readString(urlAsString, null, null);
+    public static String readString(String urlAsString, String urlBase) {
+        return readString(urlAsString, urlBase, null, null);
     }
 
-    public static String readString(String urlAsString, String userName, String password) {
+    public static String readString(String urlAsString, String urlBase, String userName, String password) {
 
         try {
-            final HttpURLConnection con = getInputStreamFor(urlAsString, userName, password);
-            final BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            final String response = IOUtils.toString(in);
+            final HttpURLConnection con = getInputStreamFor(urlAsString, urlBase, userName, password);
+            final BufferedInputStream in = new BufferedInputStream(con.getInputStream());
+            final String response = IOUtils.toString(in,  "UTF-8");
             IOUtils.closeQuietly(in);
             return response;
         } catch ( IOException e ) {
@@ -60,10 +58,10 @@ public class HttpUtil {
 
     }
 
-    public static byte[] readByteArray(String urlAsString, String userName, String password) {
+    public static byte[] readByteArray(String urlAsString, String urlBase, String userName, String password) {
 
         try {
-            final HttpURLConnection con = getInputStreamFor(urlAsString, userName, password);
+            final HttpURLConnection con = getInputStreamFor(urlAsString, urlBase, userName, password);
             final BufferedInputStream in = new BufferedInputStream(con.getInputStream());
             final byte[] response = IOUtils.toByteArray(in);
             IOUtils.closeQuietly(in);
@@ -74,10 +72,10 @@ public class HttpUtil {
         return null;
     }
 
-    private static HttpURLConnection getInputStreamFor(String urlAsString, String userName, String password) throws IOException {
+    private static HttpURLConnection getInputStreamFor(String urlAsString, String urlBase, String userName, String password) throws IOException {
         LOGGER.info(REQUEST_METHOD + "ting data from url: " + urlAsString + " as " + userName + " with timeout set to " + CONNECT_TIMEOUT );
 
-        final URL url = new URL(urlAsString);
+        final URL url = new URL(urlAsString.replaceAll("http://localhost", urlBase));
         final HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(REQUEST_METHOD);
         con.setConnectTimeout(CONNECT_TIMEOUT);

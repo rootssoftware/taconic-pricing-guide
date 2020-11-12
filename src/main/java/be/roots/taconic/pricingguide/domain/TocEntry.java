@@ -82,12 +82,7 @@ public class TocEntry implements Comparable<TocEntry> {
     }
 
     public String getLevelString() {
-        StringBuilder levelString = new StringBuilder();
-        for ( int i = 1; i <= getLevel(); i ++ ) {
-            levelString.append("  ");
-        }
-
-        return levelString.toString();
+        return "  ".repeat(Math.max(0, getLevel()));
     }
 
     public boolean isIncludedInToc() {

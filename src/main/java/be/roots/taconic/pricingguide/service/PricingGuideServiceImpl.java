@@ -25,8 +25,8 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
-import be.roots.taconic.pricingguide.domain.Model;
 import be.roots.taconic.pricingguide.domain.Request;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import be.roots.taconic.pricingguide.util.JsonUtil;
 import com.itextpdf.text.DocumentException;
@@ -52,6 +52,8 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
     private final ModelRepository modelRepository;
 
+    private final ModelService modelService;
+
     private final PDFService pdfService;
 
     private final MailService mailService;
@@ -66,9 +68,10 @@ public class PricingGuideServiceImpl implements PricingGuideService {
     @Value("${request.error.location}")
     private String requestErrorLocation;
 
-    public PricingGuideServiceImpl(HubSpotService hubSpotService, ModelRepository modelRepository, PDFService pdfService, MailService mailService, ReportService reportService, MonitoringService monitoringService) {
+    public PricingGuideServiceImpl(HubSpotService hubSpotService, ModelRepository modelRepository, ModelService modelService, PDFService pdfService, MailService mailService, ReportService reportService, MonitoringService monitoringService) {
         this.hubSpotService = hubSpotService;
         this.modelRepository = modelRepository;
+        this.modelService = modelService;
         this.pdfService = pdfService;
         this.mailService = mailService;
         this.reportService = reportService;
@@ -79,13 +82,13 @@ public class PricingGuideServiceImpl implements PricingGuideService {
     @Override
     public void buildPricingGuide(Request request) throws IOException {
 
-        LOGGER.info ( request.getId() + " - Received request to create pricing guide for hsID : " + request.getHsId() + ", modelList : " + request.getModelList() );
+        LOGGER.info(request.getId() + " - Received request to create pricing guide for hsID : " + request.getHsId() + ", modelList : " + request.getModelList());
 
         final Contact contact = hubSpotService.getContactFor(request.getHsId());
 
-        if ( contact == null ) {
+        if (contact == null) {
             LOGGER.error(request.getId() + " - Unable to find a Contact for hsID : " + request.getHsId() + ", will save and retry later");
-            saveRequestForRetry ( request );
+            saveRequestForRetry(request);
             return;
         }
 
@@ -94,16 +97,16 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
 
         try {
-            LOGGER.info ( request.getId() + " - Report the request in the CSV record " );
+            LOGGER.info(request.getId() + " - Report the request in the CSV record ");
             reportService.report(contact, request.getModelList());
         } catch (IOException e) {
-            LOGGER.error ( request.getId() + " - Couldn't report the request in the CSV record, still continuing with creating pricing guide ", e );
+            LOGGER.error(request.getId() + " - Couldn't report the request in the CSV record, still continuing with creating pricing guide ", e);
         }
 
-        final List<Model> models = modelRepository.findFor ( request.getModelList() );
+        final List<PDFModel> models = modelService.convert(modelRepository.findFor(request.getModelList()), contact);
 
         if (CollectionUtils.isEmpty(models)) {
-            LOGGER.error ( request.getId() + " - No models were found, thus no guide can be created." );
+            LOGGER.error(request.getId() + " - No models were found, thus no guide can be created.");
             return;
         }
 
@@ -111,28 +114,28 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         try {
             pricingGuide = pdfService.createPricingGuide(contact, models);
         } catch (DocumentException e) {
-            LOGGER.error ( request.getId() + " - Could create the pricing guide.", e);
+            LOGGER.error(request.getId() + " - Could create the pricing guide.", e);
             return;
         }
 
-        if ( pricingGuide == null ) {
-            LOGGER.error ( request.getId() + " - Could create the pricing guide.");
+        if (pricingGuide == null) {
+            LOGGER.error(request.getId() + " - Could create the pricing guide.");
             return;
         }
 
         try {
             mailService.sendMail(contact, pricingGuide);
         } catch (MessagingException e) {
-            LOGGER.error( request.getId() + " - Error in sending the pricing guide to " + contact.getEmail(), e);
+            LOGGER.error(request.getId() + " - Error in sending the pricing guide to " + contact.getEmail(), e);
             return;
         }
 
-        LOGGER.info ( request.getId() + " - Pricing guide successfully sent to " + contact.getEmail() );
+        LOGGER.info(request.getId() + " - Pricing guide successfully sent to " + contact.getEmail());
 
         monitoringService.stop("pricing_guide_build_request", request.getId(), request.getRemoteIp(), contact);
 
         if (!CollectionUtils.isEmpty(models) && monitoringService.shouldBeMonitored(contact.getRemoteIp())) {
-            models.forEach( model -> monitoringService.incrementCounter(model, contact));
+            models.forEach(model -> monitoringService.incrementCounter(model, contact));
         }
 
     }
@@ -141,7 +144,7 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
         String location = requestRetryLocation;
 
-        if ( request.getRetryCount() > 5 ) {
+        if (request.getRetryCount() > 5) {
             location = requestErrorLocation;
         }
 
@@ -150,7 +153,7 @@ public class PricingGuideServiceImpl implements PricingGuideService {
 
             FileUtils.writeStringToFile(new File(location, UUID.randomUUID().toString() + ".txt"), asJson);
         } catch (IOException e) {
-            LOGGER.error ( request.getId() +  " - " + e.getLocalizedMessage(), e);
+            LOGGER.error(request.getId() + " - " + e.getLocalizedMessage(), e);
         }
 
     }

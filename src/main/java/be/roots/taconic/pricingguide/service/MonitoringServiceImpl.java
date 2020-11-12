@@ -27,7 +27,7 @@ package be.roots.taconic.pricingguide.service;
 import be.roots.mona.client.DefaultMetrics;
 import be.roots.mona.client.TaconicMonitoringClient;
 import be.roots.taconic.pricingguide.domain.Contact;
-import be.roots.taconic.pricingguide.domain.Model;
+import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -115,7 +115,7 @@ public class MonitoringServiceImpl implements MonitoringService {
     }
 
     @Override
-    public void incrementCounter(Model model, Contact contact) {
+    public void incrementCounter(PDFModel model, Contact contact) {
         try {
             final Map<String, String> metaData = metaData(contact);
             metaData.put ( "model", model.getProductNameProcessed() );

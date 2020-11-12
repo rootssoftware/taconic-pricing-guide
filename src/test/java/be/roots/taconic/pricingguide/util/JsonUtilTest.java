@@ -26,10 +26,7 @@ package be.roots.taconic.pricingguide.util;
  */
 
 import be.roots.taconic.pricingguide.PricingGuideApplication;
-import be.roots.taconic.pricingguide.domain.Currency;
-import be.roots.taconic.pricingguide.domain.Line;
-import be.roots.taconic.pricingguide.domain.Model;
-import be.roots.taconic.pricingguide.domain.Pricing;
+import be.roots.taconic.pricingguide.domain.*;
 import be.roots.taconic.pricingguide.service.DefaultService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,6 +40,7 @@ import java.util.Arrays;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
@@ -56,9 +54,6 @@ public class JsonUtilTest {
     public void testAsString() throws IOException {
 
         final Line line = new Line();
-        line.setMale("");
-        line.setFemale("142.22");
-        line.setQuantity("1");
         line.setAge("Female w/Litter");
 
         final Pricing pricing = new Pricing();
@@ -67,6 +62,7 @@ public class JsonUtilTest {
         pricing.setMessage("*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.");
         pricing.setProfit(true);
         pricing.setLines(Arrays.asList(line, line, line));
+        pricing.setGender("M");
 
         final Model model = new Model();
         model.setModelNumber("WH");
@@ -79,7 +75,7 @@ public class JsonUtilTest {
         model.setPricing(Arrays.asList(pricing, pricing, pricing));
 
         assertEquals (
-                "{\"modelNumber\":\"WH\",\"productName\":\"Wistar Hannover GALAS&trade;\",\"healthReport\":\"http://ihms.taconic.com/Index/LineIndex?AnimalLine=WH\",\"nomenclature\":\"HanTax:WH\",\"species\":\"Rat\",\"animalType\":\"Outbred\",\"applications\":[\"ADMET\",\"Safety Assessment\"],\"pricing\":[{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"},{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"},{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"}],\"applicationsSorted\":[\"ADMET\",\"Safety Assessment\"]}",
+                "{\"modelNumber\":\"WH\",\"productName\":\"Wistar Hannover GALAS&trade;\",\"healthReport\":\"http://ihms.taconic.com/Index/LineIndex?AnimalLine=WH\",\"nomenclature\":\"HanTax:WH\",\"species\":\"Rat\",\"animalType\":\"Outbred\",\"applications\":[\"ADMET\",\"Safety Assessment\"],\"pricing\":[{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"},{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"},{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"}]}",
                 JsonUtil.asJson(model)
         );
 
@@ -88,13 +84,33 @@ public class JsonUtilTest {
     @Test
     public void testAsObjectFromUrl() throws IOException {
 
-        final String jsonAsString = "{\"modelNumber\":\"WH\",\"productName\":\"Wistar Hannover GALAS&trade;\",\"healthReport\":\"http://ihms.taconic.com/Index/LineIndex?AnimalLine=WH\",\"nomenclature\":\"HanTax:WH\",\"species\":\"Rat\",\"animalType\":\"Outbred\",\"applications\":[\"ADMET\",\"Safety Assessment\"],\"pricing\":[{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"},{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"},{\"profit\":true,\"currency\":\"USD\",\"category\":\"WH (in U.S. Dollars):\",\"lines\":[{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"},{\"male\":\"\",\"female\":\"142.22\",\"quantity\":\"1\",\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\"}],\"applicationsSorted\":[\"ADMET\",\"Safety Assessment\"]}"; //HttpUtil.readString("<url-to-json-file>", defaultService.getUserName(), defaultService.getPassword());
+        final String jsonAsString = "{\"modelNumber\":\"WH\",\"productName\":\"Wistar Hannover GALAS&trade;\",\"healthReport\":\"http://ihms.taconic.com/Index/LineIndex?AnimalLine=WH\",\"nomenclature\":\"HanTax:WH\",\"species\":\"Rat\",\"animalType\":\"Outbred\",\"applications\":[\"ADMET\",\"Safety Assessment\"],\"pricing\":[{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"},{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"},{\"profit\":true,\"lines\":[{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"},{\"age\":\"Female w/Litter\"}],\"message\":\"*Untimed pregnant requests are filled with late gestation pregnant females. Pups may be delivered in transit.\",\"currency\":\"USD\",\"linesSpecialized\":null,\"category\":\"WH (in U.S. Dollars):\",\"gender\":\"M\"}]}}"; //HttpUtil.readString("<url-to-json-file>", defaultService.getUserName(), defaultService.getPassword());
 
         assertNotNull ( jsonAsString );
 
         final Model model = JsonUtil.asObject(jsonAsString, Model.class);
 
         assertEquals ("Wistar Hannover GALAS&trade;", model.getProductName());
+    }
+
+    @Test
+    public void testUnkownEnum() throws IOException {
+
+        final String jsonAsString = "{\"productName\":\"Black 6\",\"pricing\":[{\"profit\":false,\"healthstatus\":\"MPF\",\"linesSpecialized\":null,\"category\":\"A Category\",\"gender\":null}]}";
+
+        assertNotNull ( jsonAsString );
+
+        final Model model = JsonUtil.asObject(jsonAsString, Model.class);
+
+        assertEquals (HealthStatus.MPF, model.getPricing().get(0).getHealthstatus());
+
+        final String jsonAsStringWithoutValidHealthStatus = "{\"productName\":\"Black 6\",\"pricing\":[{\"profit\":false,\"healthstatus\":\"MPF22\",\"linesSpecialized\":null,\"category\":\"A Category\",\"gender\":null}]}";
+
+        assertNotNull ( jsonAsStringWithoutValidHealthStatus );
+
+        final Model modelWithoutHealthStatus = JsonUtil.asObject(jsonAsStringWithoutValidHealthStatus, Model.class);
+
+        assertNull (modelWithoutHealthStatus.getPricing().get(0).getHealthstatus());
     }
 
 }

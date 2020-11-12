@@ -28,6 +28,7 @@ package be.roots.taconic.pricingguide.service;
 import be.roots.taconic.pricingguide.PricingGuideApplication;
 import be.roots.taconic.pricingguide.domain.Contact;
 import be.roots.taconic.pricingguide.domain.JobRole;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
+@Ignore
 public class HubSpotServiceTest {
 
     @Value("${api.key}")
@@ -66,7 +68,6 @@ public class HubSpotServiceTest {
         assertEquals ( "EUR", contact.getCurrency().getIsoCode() );
         assertEquals ( "Cardiovascular/Metabolic Disease", contact.getTherapeuticArea() );
         assertEquals ( "141.135.6.193", contact.getRemoteIp() );
-
     }
 
     @Test

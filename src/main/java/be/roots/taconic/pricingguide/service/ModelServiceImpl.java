@@ -25,17 +25,28 @@ package be.roots.taconic.pricingguide.service;
  */
 
 import be.roots.taconic.pricingguide.domain.Contact;
+import be.roots.taconic.pricingguide.domain.Model;
 import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
+import org.springframework.stereotype.Service;
 
-public interface MonitoringService {
+import java.util.List;
 
-    boolean shouldBeMonitored(String remoteIp);
+import static java.util.stream.Collectors.toList;
 
-    void start(String name, String id, String remoteIp, long startTimestamp);
-    void stop(String name, String id, String remoteIp, Contact contact);
+@Service
+public class ModelServiceImpl implements ModelService {
 
-    void sendAlive();
+    @Override
+    public PDFModel convert(Model model, Contact contact) {
+        return new PDFModel(model, contact);
+    }
 
-    void incrementCounter(PDFModel model, Contact contact);
+    @Override
+    public List<PDFModel> convert(List<Model> models, Contact contact) {
+        return models
+                .stream()
+                .map(model -> convert(model, contact))
+                .collect(toList());
+    }
 
 }

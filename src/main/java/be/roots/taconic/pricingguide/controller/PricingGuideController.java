@@ -25,7 +25,6 @@ package be.roots.taconic.pricingguide.controller;
  */
 
 import be.roots.taconic.pricingguide.domain.Request;
-import be.roots.taconic.pricingguide.service.MonitoringService;
 import be.roots.taconic.pricingguide.service.PricingGuideService;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,11 +50,8 @@ public class PricingGuideController {
 
     private final PricingGuideService pricingGuideService;
 
-    private final MonitoringService monitoringService;
-
-    public PricingGuideController(PricingGuideService pricingGuideService, MonitoringService monitoringService) {
+    public PricingGuideController(PricingGuideService pricingGuideService) {
         this.pricingGuideService = pricingGuideService;
-        this.monitoringService = monitoringService;
     }
 
     @RequestMapping(value = "/pricing-guide-build-request", method = RequestMethod.POST)

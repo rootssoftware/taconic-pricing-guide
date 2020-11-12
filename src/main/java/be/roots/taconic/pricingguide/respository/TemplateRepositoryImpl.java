@@ -30,6 +30,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -41,6 +42,9 @@ public class TemplateRepositoryImpl implements TemplateRepository {
 
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TemplateRepositoryImpl.class);
 
+    @Value("${url.base}")
+    private String urlBase;
+
     private final DefaultService defaultService;
 
     private final LoadingCache<String, byte[]> templateLoadingCache = CacheBuilder.newBuilder()
@@ -48,8 +52,8 @@ public class TemplateRepositoryImpl implements TemplateRepository {
             .expireAfterAccess(1, TimeUnit.HOURS)
             .build(
                     new CacheLoader<>() {
-                        public byte[] load(String key) throws IOException {
-                            return HttpUtil.readByteArray(key, defaultService.getUserName(), defaultService.getPassword());
+                        public byte[] load(String key) {
+                            return HttpUtil.readByteArray(key, urlBase, defaultService.getUserName(), defaultService.getPassword());
                         }
                     });
 

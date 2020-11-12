@@ -24,41 +24,14 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.util.List;
 
 public class Line {
 
-    private String male;
-    private String female;
-    private String quantity;
     private String age;
-
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-    public String getMale() {
-        return male;
-    }
-
-    public void setMale(String male) {
-        this.male = male;
-    }
-
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-    public String getFemale() {
-        return female;
-    }
-
-    public void setFemale(String female) {
-        this.female = female;
-    }
-
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
-    public String getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(String quantity) {
-        this.quantity = quantity;
-    }
+    private List<Price> prices;
 
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
     public String getAge() {
@@ -69,13 +42,20 @@ public class Line {
         this.age = age;
     }
 
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    public List<Price> getPrices() {
+        return prices;
+    }
+
+    public void setPrices(List<Price> prices) {
+        this.prices = prices;
+    }
+
     @Override
     public String toString() {
         return "Line{" +
-                "male='" + male + '\'' +
-                ", female='" + female + '\'' +
-                ", quantity='" + quantity + '\'' +
-                ", age='" + age + '\'' +
+                "age='" + age + '\'' +
+                ", prices=" + prices +
                 '}';
     }
 
