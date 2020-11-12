@@ -416,6 +416,7 @@ public class PDFServiceImpl implements PDFService {
                             .replaceAll("<[i|I]>|<[e|E][m|M]>", DELIMITER + "<i>")
                             .replaceAll("</[i|I]>|</[e|E][m|M]>", DELIMITER + "</i>")
                             .replaceAll("<[l|L][i|I]>", DELIMITER + "<li>")
+                            .replaceAll("<[h|H][r|R]>", DELIMITER + "<hr>")
                             .replaceAll("(<[a|A] .*?<\\/[a|A]>)", DELIMITER + "$1" + DELIMITER)
                             .replaceAll("<[p|P].*?>(.*?)<\\/[p|P]>", "$1" + DELIMITER + "<br/>")
                             // introduce new lines
@@ -469,6 +470,17 @@ public class PDFServiceImpl implements PDFService {
                             final Chunk superScript = new Chunk(text.substring(5), superScriptFont);
                             superScript.setTextRise(3f);
                             currentParagraph.add(superScript);
+
+                        } else if (text.startsWith("<hr>")) {
+
+                            final LineSeparator line = new LineSeparator();
+                            line.setLineColor(iTextUtil.getHeaderColor());
+                            line.setLineWidth(0.5f);
+
+                            currentParagraph.add(new Chunk("\n"));
+                            currentParagraph.add(new Chunk(line));
+                            currentParagraph.add(new Chunk("\n"));
+                            currentParagraph.add(new Chunk(StringUtils.trimLeadingWhitespace(text.substring(4)), usedFont));
 
                         } else if (text.startsWith("<br/>")) {
                             currentParagraph.add(new Chunk("\n" + StringUtils.trimLeadingWhitespace(text.substring(5)), usedFont));
