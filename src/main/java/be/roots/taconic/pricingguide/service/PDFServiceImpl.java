@@ -61,7 +61,8 @@ public class PDFServiceImpl implements PDFService {
     private static final float COLUMN_RELATIVE_WIDTH_LEFT = 40f;
     private static final float COLUMN_RELATIVE_WIDTH_MIDDLE = 1f;
     private static final float COLUMN_RELATIVE_WIDTH_RIGHT = 59f;
-    private static final float LEFT_MARGIN_COVER_TITLE = 325f;
+    private static final float LEFT_MARGIN_COVER_TITLE = 290f;
+    private static final float BOTTOM_MARGIN_COVER_TITLE = 55f;
 
     @Value("${url.base}")
     private String urlBase;
@@ -83,6 +84,9 @@ public class PDFServiceImpl implements PDFService {
 
     @Value("${cover.title.2}")
     private String coverTitle2;
+
+    @Value("${cover.title.3}")
+    private String coverTitle3;
 
     @Value("${disclaimer}")
     private String disclaimer;
@@ -750,22 +754,27 @@ public class PDFServiceImpl implements PDFService {
             text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
             text.setCharacterSpacing(-1f);
-            text.showTextAligned(Element.ALIGN_LEFT, coverTitle1, LEFT_MARGIN_COVER_TITLE, 195, 0);
+            text.showTextAligned(Element.ALIGN_LEFT, coverTitle1, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 150, 0);
+
+            text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
+            text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
+            text.setCharacterSpacing(-1f);
+            text.showTextAligned(Element.ALIGN_LEFT, coverTitle2, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 115, 0);
 
             text.setColorFill(iTextUtil.getFontCoverYear().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverYear().getBaseFont(), iTextUtil.getFontCoverYear().getSize());
             text.setCharacterSpacing(-12f);
-            text.showTextAligned(Element.ALIGN_LEFT, coverTitle2, LEFT_MARGIN_COVER_TITLE, 105, 0);
+            text.showTextAligned(Element.ALIGN_LEFT, coverTitle3, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 25, 0);
 
             text.setColorFill(iTextUtil.getFontCoverTriangle().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverTriangle().getBaseFont(), iTextUtil.getFontCoverTriangle().getSize());
             text.setCharacterSpacing(0f);
-            text.showTextAligned(Element.ALIGN_LEFT, "u", LEFT_MARGIN_COVER_TITLE, 80, 0);
+            text.showTextAligned(Element.ALIGN_LEFT, "u", LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE, 0);
 
             text.setColorFill(iTextUtil.getFontCoverCurrency().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverCurrency().getBaseFont(), iTextUtil.getFontCoverCurrency().getSize());
             text.setCharacterSpacing(0f);
-            text.showTextAligned(Element.ALIGN_LEFT, contact.getCurrency().getTitlePageDescription(), LEFT_MARGIN_COVER_TITLE + 15, 80, 0);
+            text.showTextAligned(Element.ALIGN_LEFT, contact.getCurrency().getTitlePageDescription(), LEFT_MARGIN_COVER_TITLE + 15, BOTTOM_MARGIN_COVER_TITLE, 0);
 
             text.endText();
 
