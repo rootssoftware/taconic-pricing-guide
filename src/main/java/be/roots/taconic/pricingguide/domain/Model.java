@@ -91,7 +91,7 @@ public class Model{
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getLicense() {
-        return license == null ? license : license.replaceAll("\\n", "");
+        return license == null ? null : license.replaceAll("\\n", "");
     }
 
     public void setLicense(String license) {

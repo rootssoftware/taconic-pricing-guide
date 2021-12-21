@@ -31,11 +31,13 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import javax.mail.MessagingException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+
+import static org.springframework.util.ObjectUtils.isEmpty;
+import static org.springframework.util.StringUtils.hasText;
 
 @Service
 public class MailServiceImpl implements MailService {
@@ -81,13 +83,13 @@ public class MailServiceImpl implements MailService {
 
         helper.setFrom(fromEmail);
 
-        if (StringUtils.isEmpty(testEmail)) {
+        if (isEmpty(testEmail)) {
             helper.setTo(contact.getEmail());
         } else {
             helper.setTo(testEmail.split(","));
         }
 
-        if ( ! StringUtils.isEmpty(bccEmail)) {
+        if ( hasText(bccEmail)) {
             helper.setBcc(bccEmail.split(","));
         }
 
@@ -117,13 +119,13 @@ public class MailServiceImpl implements MailService {
 
         helper.setFrom(fromEmail);
 
-        if (StringUtils.isEmpty(testEmail)) {
+        if (isEmpty(testEmail)) {
             helper.setTo(reportRecipientEmail.split(","));
         } else {
             helper.setTo(testEmail.split(","));
         }
 
-        if ( ! StringUtils.isEmpty(bccEmail)) {
+        if ( hasText(bccEmail)) {
             helper.setBcc(bccEmail.split(","));
         }
 

@@ -24,13 +24,13 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class Logo {
 
     private String url;
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getUrl() {
         return url;
     }

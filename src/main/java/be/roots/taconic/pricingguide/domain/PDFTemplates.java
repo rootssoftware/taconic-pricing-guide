@@ -26,7 +26,7 @@ package be.roots.taconic.pricingguide.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -38,7 +38,7 @@ public class PDFTemplates {
     private Template model;
     private List<Template> after;
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<Template> getAfter() {
         return after;
     }
@@ -47,7 +47,7 @@ public class PDFTemplates {
         this.after = after;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<Template> getBefore() {
         return before;
     }
@@ -56,7 +56,7 @@ public class PDFTemplates {
         this.before = before;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Template getModel() {
         return model;
     }
@@ -65,7 +65,7 @@ public class PDFTemplates {
         this.model = model;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Logo getLogo() {
         return logo;
     }

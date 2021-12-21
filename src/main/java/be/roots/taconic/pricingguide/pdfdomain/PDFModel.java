@@ -50,6 +50,7 @@ public class PDFModel implements Comparable<PDFModel> {
         // keep only the valid prices for this contact
         this.categories = validPricings()
                 .stream()
+                .filter(Objects::nonNull)
                 .map(PDFCategory::new)
                 .collect(toList());
     }
@@ -136,7 +137,7 @@ public class PDFModel implements Comparable<PDFModel> {
             final Map<String, Pricing> nonProfitPricing = new HashMap<>();
             final Map<String, Pricing> profitPricing = new HashMap<>();
 
-            // loop trough all pricings and note all the available and split on profitability
+            // loop through all pricings and note all the available and split on profitability
             model.getPricing()
                     .stream()
                     .filter(p -> p.getCurrency().getIsoCode().equals(contact.getCurrency().getIsoCode()))

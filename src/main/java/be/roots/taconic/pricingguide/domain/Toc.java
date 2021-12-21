@@ -27,7 +27,6 @@ package be.roots.taconic.pricingguide.domain;
 import be.roots.taconic.pricingguide.service.PDFServiceImpl;
 import be.roots.taconic.pricingguide.util.IntUtil;
 import be.roots.taconic.pricingguide.util.iTextUtil;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static org.springframework.util.StringUtils.hasText;
 
 public class Toc {
 
@@ -90,7 +90,7 @@ public class Toc {
 
             // calculating the pagesequence
             if ( entry.getNumberOfPages() > 0 ) {
-                if (! StringUtils.isEmpty(pageSequence)) {
+                if (hasText(pageSequence)) {
                     pageSequence += ",";
                 }
                 if ( entry.getNumberOfPages() == 1 ) {

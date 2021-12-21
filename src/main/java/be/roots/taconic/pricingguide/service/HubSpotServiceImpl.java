@@ -127,7 +127,7 @@ public class HubSpotServiceImpl implements HubSpotService {
 
             contact.setRemoteIp(parse(contactProperties, "ipaddress") );
 
-            LOGGER.info("Contact: " + contact.toString());
+            LOGGER.info("Contact: " + contact);
 
             return contact;
         }

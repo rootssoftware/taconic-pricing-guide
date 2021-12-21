@@ -27,10 +27,11 @@ package be.roots.taconic.pricingguide.domain;
 import be.roots.taconic.pricingguide.util.DefaultUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.springframework.util.StringUtils;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
+
+import static org.springframework.util.StringUtils.hasText;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Pricing {
@@ -46,7 +47,7 @@ public class Pricing {
     private String category;
     private String gender;
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public boolean isProfit() {
         return profit;
     }
@@ -55,7 +56,7 @@ public class Pricing {
         this.profit = profit;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public Currency getCurrency() {
         return currency;
     }
@@ -64,7 +65,7 @@ public class Pricing {
         this.currency = currency;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public HealthStatus getHealthstatus() {
         return healthstatus;
     }
@@ -73,7 +74,7 @@ public class Pricing {
         this.healthstatus = healthstatus;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getCategory() {
         return category;
     }
@@ -84,13 +85,13 @@ public class Pricing {
 
     @JsonIgnore
     public String getCategoryCode() {
-        if (!StringUtils.isEmpty(category)) {
+        if (hasText(category)) {
             return category.replaceAll(DefaultUtil.PRICING_CATEGORY_NON_PROFIT, "").toUpperCase().trim();
         }
         return category;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<Line> getLines() {
         return lines;
     }
@@ -99,7 +100,7 @@ public class Pricing {
         this.lines = lines;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<String> getQuantities() {
         return quantities;
     }
@@ -108,7 +109,7 @@ public class Pricing {
         this.quantities = quantities;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getMessage() {
         return message;
     }
@@ -121,7 +122,7 @@ public class Pricing {
         return linesSpecialized;
     }
 
-    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<String> getQuantitiesSpecialized() {
         return quantitiesSpecialized;
     }

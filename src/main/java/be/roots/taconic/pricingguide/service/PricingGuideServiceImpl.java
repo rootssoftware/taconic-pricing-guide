@@ -40,6 +40,7 @@ import org.springframework.util.CollectionUtils;
 import javax.mail.MessagingException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
 
@@ -151,7 +152,7 @@ public class PricingGuideServiceImpl implements PricingGuideService {
         try {
             final String asJson = JsonUtil.asJson(request);
 
-            FileUtils.writeStringToFile(new File(location, UUID.randomUUID().toString() + ".txt"), asJson);
+            FileUtils.writeStringToFile(new File(location, UUID.randomUUID() + ".txt"), asJson, Charset.defaultCharset());
         } catch (IOException e) {
             LOGGER.error(request.getId() + " - " + e.getLocalizedMessage(), e);
         }

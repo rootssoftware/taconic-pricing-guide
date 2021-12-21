@@ -32,6 +32,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class HttpUtil {
 
@@ -48,7 +49,7 @@ public class HttpUtil {
         try {
             final HttpURLConnection con = getInputStreamFor(urlAsString, urlBase, userName, password);
             final BufferedInputStream in = new BufferedInputStream(con.getInputStream());
-            final String response = IOUtils.toString(in,  "UTF-8");
+            final String response = IOUtils.toString(in, StandardCharsets.UTF_8);
             IOUtils.closeQuietly(in);
             return response;
         } catch ( IOException e ) {

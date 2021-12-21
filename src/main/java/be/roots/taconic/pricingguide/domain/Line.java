@@ -24,7 +24,7 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class Line {
     private String age;
     private List<Price> prices;
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getAge() {
         return age;
     }
@@ -42,7 +42,7 @@ public class Line {
         this.age = age;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public List<Price> getPrices() {
         return prices;
     }

@@ -24,10 +24,10 @@ package be.roots.taconic.pricingguide.util;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.springframework.util.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
+
+import static org.springframework.util.StringUtils.hasText;
 
 public class GreekAlphabet {
 
@@ -77,7 +77,7 @@ public class GreekAlphabet {
     }
 
     public static String replaceGreekHtmlCodesWithUnicode(String text) {
-        if ( !StringUtils.isEmpty(text)) {
+        if ( hasText(text)) {
             for ( String[] greekLetter : getAlphabet() ) {
                 text = text.replaceAll(greekLetter[0], greekLetter[2]);
             }

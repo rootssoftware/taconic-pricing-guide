@@ -29,23 +29,20 @@ import be.roots.taconic.pricingguide.service.ModelService;
 import be.roots.taconic.pricingguide.util.DefaultUtil;
 import be.roots.taconic.pricingguide.util.JsonUtil;
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
 public class ModelTest {
@@ -181,7 +178,7 @@ public class ModelTest {
     @Test
     public void testJsonParsing() throws IOException {
 
-        final String file = FileUtils.readFileToString(new ClassPathResource("b6-new.json").getFile());
+        final String file = FileUtils.readFileToString(new ClassPathResource("b6-new.json").getFile(), StandardCharsets.UTF_8);
 
         assertTrue(StringUtils.hasText(file));
 

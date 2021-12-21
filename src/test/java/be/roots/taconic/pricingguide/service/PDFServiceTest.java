@@ -33,12 +33,10 @@ import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import com.itextpdf.text.DocumentException;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.File;
@@ -48,11 +46,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static junit.framework.TestCase.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
 public class PDFServiceTest {

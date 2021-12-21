@@ -1,13 +1,13 @@
 package be.roots.taconic.pricingguide.domain;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public class Price {
 
     private String quantity;
     private String price;
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getQuantity() {
         return quantity;
     }
@@ -16,7 +16,7 @@ public class Price {
         this.quantity = quantity;
     }
 
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public String getPrice() {
         return price;
     }

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +77,7 @@ public class RetryRequestJob {
             for ( File file : files ) {
                 if ( file.isFile() && file.getName().endsWith(".txt") ) {
                     try {
-                        final Request request = JsonUtil.asObject(FileUtils.readFileToString(file), Request.class);
+                        final Request request = JsonUtil.asObject(FileUtils.readFileToString(file, StandardCharsets.UTF_8), Request.class);
                         result.add (request);
                         file.delete();
                     } catch (IOException e) {

@@ -2,9 +2,9 @@ package be.roots.taconic.pricingguide.pdfdomain;
 
 import be.roots.taconic.pricingguide.domain.HealthStatus;
 import be.roots.taconic.pricingguide.domain.Pricing;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PDFCategoryTest {
 

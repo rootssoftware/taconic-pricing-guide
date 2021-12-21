@@ -31,11 +31,9 @@ import be.roots.taconic.pricingguide.domain.Currency;
 import be.roots.taconic.pricingguide.pdfdomain.PDFModel;
 import be.roots.taconic.pricingguide.respository.ModelRepository;
 import com.itextpdf.text.DocumentException;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import javax.mail.MessagingException;
@@ -43,10 +41,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = PricingGuideApplication.class)
 @WebAppConfiguration
-@Ignore
+@Disabled
 public class MailServiceTest {
 
     private final MailService mailService;

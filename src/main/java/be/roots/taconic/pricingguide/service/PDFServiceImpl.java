@@ -50,7 +50,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.*;
 
-import static java.util.Arrays.asList;
+import static org.springframework.util.StringUtils.hasText;
 
 @Service
 public class PDFServiceImpl implements PDFService {
@@ -407,7 +407,7 @@ public class PDFServiceImpl implements PDFService {
         final List<Paragraph> paragraphs = new ArrayList<>();
         paragraphs.add(firstParagraph);
 
-        if (!StringUtils.isEmpty(name)) {
+        if (hasText(name)) {
 
             for (String[] alphabet : GreekAlphabet.getAlphabet()) {
                 name = name.replaceAll(alphabet[0], DELIMITER + alphabet[0] + DELIMITER);
@@ -490,7 +490,7 @@ public class PDFServiceImpl implements PDFService {
                             currentParagraph.add(new Chunk("\n" + StringUtils.trimLeadingWhitespace(text.substring(5)), usedFont));
                         } else if (text.startsWith("<li>")) {
                             final Paragraph listItem = new Paragraph();
-                            listItem.setTabSettings(new TabSettings(asList(new TabStop(10f, TabStop.Alignment.LEFT))));
+                            listItem.setTabSettings(new TabSettings(List.of(new TabStop(10f, TabStop.Alignment.LEFT))));
                             listItem.setFirstLineIndent(-10f);
                             listItem.setIndentationLeft(10f);
                             listItem.add(new Chunk("\u2022", usedFont));
@@ -559,7 +559,7 @@ public class PDFServiceImpl implements PDFService {
             modelTable.addCell(cell(buildModelPricingTables(category.getSpecialized(), true)));
         }
 
-        if (!StringUtils.isEmpty(category.getMessage())) {
+        if (hasText(category.getMessage())) {
             modelTable.addCell(cell(new Paragraph(category.getMessage(), iTextUtil.getFontModelPricingMessage())));
             modelTable.addCell(cell(new Paragraph(" ")));
         }
@@ -689,7 +689,7 @@ public class PDFServiceImpl implements PDFService {
                         p.getChunks()
                                 .forEach(chunk -> {
                                     chunk.setLineHeight(13f);
-                                    if (StringUtils.hasText(url))
+                                    if (hasText(url))
                                         chunk.setAction(new PdfAction(url));
                                 })
                 )
@@ -751,20 +751,26 @@ public class PDFServiceImpl implements PDFService {
 
             text.beginText();
 
-            text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
-            text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
-            text.setCharacterSpacing(-1f);
-            text.showTextAligned(Element.ALIGN_LEFT, coverTitle1, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 150, 0);
+            if(hasText(coverTitle1)){
+                text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
+                text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize() / 2.5f);
+                text.setCharacterSpacing(-1f);
+                text.showTextAligned(Element.ALIGN_LEFT, coverTitle1, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 150, 0);
+            }
 
-            text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
-            text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
-            text.setCharacterSpacing(-1f);
-            text.showTextAligned(Element.ALIGN_LEFT, coverTitle2, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 115, 0);
+            if(hasText(coverTitle2)) {
+                text.setColorFill(iTextUtil.getFontCoverPricingguide().getColor());
+                text.setFontAndSize(iTextUtil.getFontCoverPricingguide().getBaseFont(), iTextUtil.getFontCoverPricingguide().getSize());
+                text.setCharacterSpacing(-1f);
+                text.showTextAligned(Element.ALIGN_LEFT, coverTitle2, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 115, 0);
+            }
 
-            text.setColorFill(iTextUtil.getFontCoverYear().getColor());
-            text.setFontAndSize(iTextUtil.getFontCoverYear().getBaseFont(), iTextUtil.getFontCoverYear().getSize());
-            text.setCharacterSpacing(-12f);
-            text.showTextAligned(Element.ALIGN_LEFT, coverTitle3, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 25, 0);
+            if(hasText(coverTitle3)) {
+                text.setColorFill(iTextUtil.getFontCoverYear().getColor());
+                text.setFontAndSize(iTextUtil.getFontCoverYear().getBaseFont(), iTextUtil.getFontCoverYear().getSize());
+                text.setCharacterSpacing(-12f);
+                text.showTextAligned(Element.ALIGN_LEFT, coverTitle3, LEFT_MARGIN_COVER_TITLE, BOTTOM_MARGIN_COVER_TITLE + 25, 0);
+            }
 
             text.setColorFill(iTextUtil.getFontCoverTriangle().getColor());
             text.setFontAndSize(iTextUtil.getFontCoverTriangle().getBaseFont(), iTextUtil.getFontCoverTriangle().getSize());
@@ -794,7 +800,7 @@ public class PDFServiceImpl implements PDFService {
             text.showTextAligned(Element.ALIGN_LEFT, contact.getFullName(), 355, 662, 0);
 
             // set company name
-            if (!StringUtils.isEmpty(contact.getCompany())) {
+            if (hasText(contact.getCompany())) {
                 text.showTextAligned(Element.ALIGN_LEFT, contact.getCompany(), 355, 643, 0);
                 text.showTextAligned(Element.ALIGN_LEFT, new SimpleDateFormat("MM-dd-yyyy").format(new Date()), 355, 624, 0);
             } else {

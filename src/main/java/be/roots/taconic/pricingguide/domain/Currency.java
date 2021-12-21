@@ -24,7 +24,7 @@ package be.roots.taconic.pricingguide.domain;
    For more information, please contact Roots nv at this address: support@roots.be
  */
 
-import org.springframework.util.StringUtils;
+import static org.springframework.util.StringUtils.hasText;
 
 public enum Currency {
 
@@ -65,7 +65,7 @@ public enum Currency {
 
     public static Currency getEnum(String value) {
 
-        if ( !StringUtils.isEmpty(value)) {
+        if ( hasText(value)) {
             for ( Currency currency : Currency.values() ) {
                 if ( value.toLowerCase().endsWith(currency.getDescription().toLowerCase()) ) {
                     return currency;
