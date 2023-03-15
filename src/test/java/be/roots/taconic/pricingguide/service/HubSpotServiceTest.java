@@ -31,7 +31,6 @@ import be.roots.taconic.pricingguide.domain.JobRole;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
 
@@ -43,9 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @WebAppConfiguration
 @Disabled
 public class HubSpotServiceTest {
-
-    @Value("${api.key}")
-    private String apiKey;
 
     @Autowired
     private HubSpotService hubSpotService;
@@ -70,7 +66,7 @@ public class HubSpotServiceTest {
     @Test
     public void testGetContactDetailsFor() throws IOException {
 
-        final Contact contact = hubSpotService.getContactDetailsFor("<hubspot-url>" + apiKey);
+        final Contact contact = hubSpotService.getContactDetailsFor("<hubspot-url>");
 
         assertEquals ( "Roots nv", contact.getCompany() );
         assertEquals ( "Koen", contact.getFirstName() );

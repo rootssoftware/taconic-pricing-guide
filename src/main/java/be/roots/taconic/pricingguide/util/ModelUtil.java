@@ -28,28 +28,13 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ModelUtil {
 
-    public static class CateGoryAndGender {
-        private final String category;
-        private final boolean male;
-
-        public CateGoryAndGender(String category, boolean male) {
-            this.category = category;
-            this.male = male;
-        }
-
-        public String getCategory() {
-            return category;
-        }
-
-        public boolean isMale() {
-            return male;
-        }
+    public record CateGoryAndGender(String category, boolean male) {
 
         public boolean isFemale() {
-            return !male;
-        }
+                return !male;
+            }
 
-    }
+        }
 
     public static CateGoryAndGender stripGenderFromCategoryCode(String categoryCode) {
 

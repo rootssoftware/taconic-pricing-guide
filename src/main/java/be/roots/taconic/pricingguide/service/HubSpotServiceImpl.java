@@ -29,7 +29,6 @@ import be.roots.taconic.pricingguide.domain.Currency;
 import be.roots.taconic.pricingguide.hubspot.FormSubmission;
 import be.roots.taconic.pricingguide.hubspot.RecentContact;
 import be.roots.taconic.pricingguide.hubspot.RecentContacts;
-import be.roots.taconic.pricingguide.util.HttpUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -45,34 +44,32 @@ public class HubSpotServiceImpl implements HubSpotService {
     
     private final static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(HubSpotService.class);
 
-    @Value("${url.base}")
-    private String urlBase;
-
-    @Value("${api.key}")
-    private String apiKey;
-
     @Value("${api.url}")
     private String apiUrl;
 
     @Value("${api.contact.url}")
     private String apiContactUrl;
 
+    private final RestTemplate hubSpotRestTemplate;
+
+    public HubSpotServiceImpl(RestTemplate hubSpotRestTemplate) {
+        this.hubSpotRestTemplate = hubSpotRestTemplate;
+    }
+
     public Contact getContactFor ( String hsID ) throws IOException {
 
         LOGGER.info("Start getting the recent contact information based on conversion-id: " + hsID );
-
-        final RestTemplate restTemplate = new RestTemplate();
 
         RecentContacts recentContacts = null;
         do {
             if ( recentContacts == null ) {
                 // first call
                 LOGGER.info("Initial call for recent contacts" );
-                recentContacts = restTemplate.getForObject(apiUrl + apiKey + "&count=100", RecentContacts.class);
+                recentContacts = hubSpotRestTemplate.getForObject(apiUrl + "?count=100", RecentContacts.class);
             } else {
                 // page through the next calls
                 LOGGER.info("Secondary call for recent contacts with timeOffset=" + recentContacts.getTimeOffset() + ", and vidOffset=" + recentContacts.getVidOffset() );
-                recentContacts = restTemplate.getForObject(apiUrl + apiKey + "&count=100&timeOffset=" + recentContacts.getTimeOffset() + "&vidOffset=" + recentContacts.getVidOffset(), RecentContacts.class);
+                recentContacts = hubSpotRestTemplate.getForObject(apiUrl + "?count=100&timeOffset=" + recentContacts.getTimeOffset() + "&vidOffset=" + recentContacts.getVidOffset(), RecentContacts.class);
             }
 
             if ( recentContacts != null && ! CollectionUtils.isEmpty(recentContacts.getContacts())) {
@@ -84,7 +81,7 @@ public class HubSpotServiceImpl implements HubSpotService {
                         for ( FormSubmission form : contact.getFormSubmissions() ) {
 
                             if ( hsID.equals(form.getConversionId()) ) {
-                                final Contact result = getContactDetailsFor(String.format(apiContactUrl + apiKey, contact.getVid()));
+                                final Contact result = getContactDetailsFor(String.format(apiContactUrl, contact.getVid()));
                                 result.setHsId ( hsID );
                                 return result;
 
@@ -107,10 +104,10 @@ public class HubSpotServiceImpl implements HubSpotService {
 
     public Contact getContactDetailsFor(String url) throws IOException {
         //Call Contact Api to get individual information
-        final String response2 = HttpUtil.readString(url, urlBase);
-        final ObjectMapper hsContactMap = new ObjectMapper();
-        final JsonNode contactjson = hsContactMap.readTree(response2);
-        final JsonNode contactProperties = contactjson.get("properties");
+        final var contactDetailsResponse = hubSpotRestTemplate.getForObject(url, String.class);
+        final var hsContactMap = new ObjectMapper();
+        final var contactAsJson = hsContactMap.readTree(contactDetailsResponse);
+        final var contactProperties = contactAsJson.get("properties");
 
         if ( contactProperties  != null ) {
 

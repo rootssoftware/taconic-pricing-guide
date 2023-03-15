@@ -411,7 +411,7 @@ public class iTextUtil {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             // the font file
             RandomAccessFile raf = new RandomAccessFile(fontFileName, "r");
-            byte fontfile[] = new byte[(int) raf.length()];
+            byte[] fontfile = new byte[(int) raf.length()];
             raf.readFully(fontfile);
             raf.close();
             // create a new stream for the font file

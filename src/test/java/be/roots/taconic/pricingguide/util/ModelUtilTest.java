@@ -13,8 +13,8 @@ public class ModelUtilTest {
         assertNull(ModelUtil.stripGenderFromCategoryCode(null));
         assertNull(ModelUtil.stripGenderFromCategoryCode(""));
 
-        assertEquals("1349-RD1 MPF WT/WT", ModelUtil.stripGenderFromCategoryCode("1349-RD1-M MPF WT/WT").getCategory());
-        assertTrue(ModelUtil.stripGenderFromCategoryCode("1349-RD1-M MPF WT/WT").isMale());
+        assertEquals("1349-RD1 MPF WT/WT", ModelUtil.stripGenderFromCategoryCode("1349-RD1-M MPF WT/WT").category());
+        assertTrue(ModelUtil.stripGenderFromCategoryCode("1349-RD1-M MPF WT/WT").male());
 
     }
 

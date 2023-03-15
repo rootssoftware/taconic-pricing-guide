@@ -76,7 +76,7 @@ public class ModelRepositoryImpl implements ModelRepository {
         try {
             return modelLoadingCache.get(key);
         } catch (RuntimeException | ExecutionException e) {
-            LOGGER.error (e.getLocalizedMessage(), e);
+            LOGGER.error(e.getLocalizedMessage(), e);
         }
         return null;
     }
@@ -92,19 +92,19 @@ public class ModelRepositoryImpl implements ModelRepository {
             final Set<String> modelIds = new HashSet<>(modelList);
 
             // check if "all" is passed; if so execute findAll
-            for ( String modelId : modelIds ) {
-                if ( "all".equalsIgnoreCase(modelId)) {
+            for (String modelId : modelIds) {
+                if ("all".equalsIgnoreCase(modelId)) {
                     return findAll();
                 }
             }
 
             // find the models based on their ids
-            for( String modelId : modelIds ) {
+            for (String modelId : modelIds) {
                 final Model model = findOne(modelId);
-                if ( model != null ) {
-                    models.add ( model );
+                if (model != null) {
+                    models.add(model);
                 } else {
-                    LOGGER.error ( "Couldn't find model for " + modelId );
+                    LOGGER.error("Couldn't find model for " + modelId);
                 }
             }
         }
@@ -115,18 +115,14 @@ public class ModelRepositoryImpl implements ModelRepository {
     @Override
     public List<Model> findAll() throws IOException {
         final String jsonAsString = HttpUtil.readString(defaultService.getModelCatalogUrl(), urlBase, defaultService.getUserName(), defaultService.getPassword());
-        List<HashMap> catalog = null;
-        if ( jsonAsString != null ) {
-            catalog = JsonUtil.asObject(jsonAsString, List.class);
-        }
-
-        if ( ! CollectionUtils.isEmpty(catalog)) {
-
-            return catalog
-                    .stream()
-                    .map(entry -> findOne((String) entry.get("catalog_id")))
-                    .collect(toList());
-
+        if (jsonAsString != null) {
+            final List<HashMap> catalog = JsonUtil.asObject(jsonAsString, List.class);
+            if (!CollectionUtils.isEmpty(catalog)) {
+                return catalog
+                        .stream()
+                        .map(entry -> findOne((String) entry.get("catalog_id")))
+                        .collect(toList());
+            }
         }
 
         return new ArrayList<>();
